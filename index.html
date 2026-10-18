@@ -180,7 +180,7 @@ li.done .t, li.done .b { opacity: .45; }
 /* Noticias */
 .carousel { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -20px 18px; padding: 4px 20px 16px; scrollbar-width: none; }
 .carousel::-webkit-scrollbar { display: none; }
-.story-big { flex: 0 0 84%; scroll-snap-align: center; padding: 22px; min-height: 190px; display: flex; flex-direction: column; justify-content: space-between; }
+.story-big { flex: 0 0 84%; scroll-snap-align: center; padding: 22px; min-height: 190px; display: flex; flex-direction: column; justify-content: space-between; max-width: 420px; }
 .story-big .n { font-size: 44px; font-weight: 800; letter-spacing: -.04em; color: var(--ink-3); opacity: .45; line-height: 1; }
 .story-big h3 { font-size: 22px; line-height: 1.25; letter-spacing: -.02em; margin: 14px 0 10px; }
 .story { padding: 20px 22px; margin-bottom: 12px; display: block; }
@@ -233,6 +233,34 @@ li.done .t, li.done .b { opacity: .45; }
 figure.chart { margin: 0; }
 figure.chart svg { width: 100%; height: auto; display: block; }
 figure.chart figcaption { font-size: 13px; color: var(--ink-3); margin-top: 8px; }
+
+/* Frase del día */
+.quote { padding: 26px 24px 22px; margin-bottom: 14px; }
+.quote blockquote { margin: 0; font-family: ui-serif, "New York", Georgia, "Times New Roman", serif; font-size: 23px; line-height: 1.35; letter-spacing: -.01em; font-weight: 500; }
+.quote blockquote::before { content: "“"; display: block; font-size: 54px; line-height: .6; color: var(--accent); opacity: .5; margin-bottom: 6px; }
+.quote figcaption { margin-top: 12px; font-size: 14px; color: var(--ink-3); font-weight: 600; }
+
+/* Imágenes */
+.media { overflow: hidden; background: var(--chip); }
+.media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero.has-img { padding: 0; overflow: hidden; }
+.hero .media { aspect-ratio: 16 / 9; }
+.hero .hero-body { padding: 20px 24px 24px; }
+.story-big.has-img { padding: 0; overflow: hidden; justify-content: flex-start; }
+.story-big .media { aspect-ratio: 16 / 10; }
+.story-big:not(.has-img) .sb-body { padding: 0; }
+.story-big .sb-body { padding: 18px 20px 20px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; }
+.story-big h3 { margin-top: 0; }
+.story.with-thumb { display: flex; gap: 16px; align-items: flex-start; }
+.story .thumb { flex: none; width: 92px; height: 92px; border-radius: 16px; order: 2; }
+.story .story-text { flex: 1; min-width: 0; }
+
+/* Logos */
+.job-top { display: flex; gap: 14px; align-items: center; }
+.logo { flex: none; width: 48px; height: 48px; border-radius: 13px; background: var(--glass-strong); border: 1px solid var(--hair); display: flex; align-items: center; justify-content: center; overflow: hidden; font-weight: 700; font-size: 17px; color: var(--ink-2); }
+.logo img { width: 32px; height: 32px; object-fit: contain; }
+.job-top .co { margin: 0; }
+.job-top .who { font-weight: 650; font-size: 16px; }
 
 /* Acceso */
 .login { max-width: 420px; margin: 0 auto; padding: calc(12vh + env(safe-area-inset-top)) 20px 40px; }
@@ -332,6 +360,60 @@ const num = (v, d = 4) => (typeof v === "number" && isFinite(v)) ? v.toLocaleStr
 const toNum = (v) => typeof v === "number" ? v : (v != null && v !== "" && isFinite(+v) ? +v : null);
 const pct = (v) => (typeof v === "number" && isFinite(v)) ? (v > 0 ? "+" : "") + v.toLocaleString("es-ES", { maximumFractionDigits: 2 }) + " %" : "—";
 const arr = (v) => Array.isArray(v) ? v : [];
+const img = (u, cls = "") => { const h = safeUrl(u); return h ? `<div class="media ${cls}"><img src="${esc(h)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>` : ""; };
+// Si una imagen no carga, quitamos su hueco
+document.addEventListener("error", (e) => {
+  const t = e.target;
+  if (t && t.tagName === "IMG") {
+    const box = t.closest(".logo");
+    if (box) { box.innerHTML = esc(box.dataset.ini || "·"); return; }
+    const m = t.closest(".media"); if (m) { const card = m.parentElement; m.remove(); card && card.classList.remove("has-img", "with-thumb"); }
+  }
+}, true);
+const domainOk = (d) => /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(String(d || "").trim());
+function logo(o) {
+  const ini = String(o.empresa || "?").trim().split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+  const d = String(o.dominio || "").trim().toLowerCase();
+  return `<span class="logo" data-ini="${esc(ini)}" aria-hidden="true">${domainOk(d) ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=128" alt="" loading="lazy" referrerpolicy="no-referrer">` : esc(ini)}</span>`;
+}
+
+// Frase del día (cambia cada día)
+const FRASES = [
+  ["No es que tengamos poco tiempo, es que perdemos mucho.", "Séneca"],
+  ["Caminante, no hay camino, se hace camino al andar.", "Antonio Machado"],
+  ["El que lee mucho y anda mucho, ve mucho y sabe mucho.", "Miguel de Cervantes"],
+  ["Nadie se baña dos veces en el mismo río.", "Heráclito"],
+  ["Lo que no es útil para la colmena, tampoco lo es para la abeja.", "Marco Aurelio"],
+  ["El mejor modo de vengarse de un enemigo es no parecerse a él.", "Marco Aurelio"],
+  ["Dadme un punto de apoyo y moveré el mundo.", "Arquímedes"],
+  ["Vísteme despacio, que tengo prisa.", "Dicho popular"],
+  ["Lo bueno, si breve, dos veces bueno.", "Baltasar Gracián"],
+  ["Bien hecho es mejor que bien dicho.", "Benjamin Franklin"],
+  ["El tiempo perdido nunca se vuelve a encontrar.", "Benjamin Franklin"],
+  ["Ningún viento es favorable para quien no sabe adónde va.", "Séneca"],
+  ["Mientras se aplaza la vida, la vida pasa.", "Séneca"],
+  ["Hoy es siempre todavía.", "Antonio Machado"],
+  ["Despacito y buena letra: el hacer las cosas bien importa más que el hacerlas.", "Antonio Machado"],
+  ["Quien tiene un porqué para vivir puede soportar casi cualquier cómo.", "Friedrich Nietzsche"],
+  ["Es mejor encender una vela que maldecir la oscuridad.", "Proverbio chino"],
+  ["Un viaje de mil millas comienza con un solo paso.", "Lao-Tse"],
+  ["Aprender sin pensar es inútil; pensar sin aprender, peligroso.", "Confucio"],
+  ["Más vale maña que fuerza.", "Refrán"],
+  ["Hombre prevenido vale por dos.", "Refrán"],
+  ["Poco a poco se va lejos.", "Refrán"],
+  ["A mal tiempo, buena cara.", "Refrán"],
+  ["El genio es un uno por ciento de inspiración y un noventa y nueve por ciento de transpiración.", "Thomas Edison"],
+  ["Pienso, luego existo.", "René Descartes"],
+  ["La libertad, Sancho, es uno de los más preciosos dones que a los hombres dieron los cielos.", "Miguel de Cervantes"],
+  ["Conócete a ti mismo.", "Templo de Delfos"],
+  ["Ande yo caliente, y ríase la gente.", "Luis de Góngora"],
+  ["Que toda la vida es sueño, y los sueños, sueños son.", "Pedro Calderón de la Barca"],
+  ["Más vale tarde que nunca.", "Refrán"],
+];
+function fraseDeHoy() {
+  const t = todayISO(); const n = Math.floor(Date.parse(t + "T00:00:00Z") / 864e5);
+  return FRASES[((n % FRASES.length) + FRASES.length) % FRASES.length];
+}
 
 function todayISO() { return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()); }
 function dayLabel(iso, long = true) {
@@ -466,9 +548,12 @@ function render() {
 function renderHoy() {
   const c = pick("correo"), e = pick("empleo"), n = pick("noticias"), x = pick("cambio");
   let h = `<h2 class="sr-only" id="h-hoy">Resumen de hoy</h2>`;
+  const [fr, au] = fraseDeHoy();
+  h += `<figure class="glass quote" style="margin:0 0 14px"><blockquote>${esc(fr)}</blockquote><figcaption>${esc(au)}</figcaption></figure>`;
   const top = arr(n?.data?.destacadas)[0];
   if (top) {
-    h += `<a class="glass hero" href="#noticias"><span class="label acc">Lo más importante</span><h2>${esc(top.titulo)}</h2>${top.fuente ? `<p class="tiny faint" style="margin:10px 0 0">${esc(top.fuente)}</p>` : ""}</a>`;
+    const im = img(top.imagen);
+    h += `<a class="glass hero ${im ? "has-img" : ""}" href="#noticias">${im}<div class="${im ? "hero-body" : ""}"><span class="label acc">Lo más importante</span><h2>${esc(top.titulo)}</h2>${top.fuente ? `<p class="tiny faint" style="margin:10px 0 0">${esc(top.fuente)}</p>` : ""}</div></a>`;
   }
   h += `<div class="tiles">`;
   // Cambio
@@ -509,8 +594,12 @@ function renderNoticias() {
   if (top.length) {
     h += `<div class="carousel" role="list" aria-label="Lo más importante">${top.map((t, i) => {
       const u = safeUrl(t.url);
-      const inner = `<div><span class="n" aria-hidden="true">${i + 1}</span><h3>${esc(t.titulo)}</h3></div><span class="label acc">${esc(t.fuente || "Leer")}${u ? NEWTAB : ""}</span>`;
-      return u ? `<a role="listitem" class="glass story-big" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${inner}</a>` : `<div role="listitem" class="glass story-big">${inner}</div>`;
+      const im = img(t.imagen);
+      const inner = im
+        ? `${im}<div class="sb-body"><h3>${esc(t.titulo)}</h3><span class="label acc">${i + 1} · ${esc(t.fuente || "Leer")}${u ? NEWTAB : ""}</span></div>`
+        : `<div><span class="n" aria-hidden="true">${i + 1}</span><h3>${esc(t.titulo)}</h3></div><span class="label acc">${esc(t.fuente || "Leer")}${u ? NEWTAB : ""}</span>`;
+      const sbCls = im ? "glass story-big has-img" : "glass story-big";
+      return u ? `<a role="listitem" class="${sbCls}" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${inner}</a>` : `<div role="listitem" class="glass story-big">${inner}</div>`;
     }).join("")}</div>`;
   }
   const secs = arr(d.secciones);
@@ -522,8 +611,10 @@ function renderNoticias() {
     else if (s.nota) h += `<p class="small muted" style="margin:0 4px 12px">${esc(s.nota)}</p>`;
     h += items.map(it => {
       const u = safeUrl(it.url);
-      const inner = `<h3>${esc(it.titulo)}</h3>${it.resumen ? `<p>${esc(it.resumen)}</p>` : ""}<span class="src">${esc(it.fuente || "Leer")}${it.de_pago ? " · de pago" : ""} ${u ? I.arrow : ""}</span>${u ? NEWTAB : ""}`;
-      return u ? `<a class="glass story" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${inner}</a>` : `<div class="glass story">${inner}</div>`;
+      const th = img(it.imagen, "thumb");
+      const inner = `${th}<div class="story-text"><h3>${esc(it.titulo)}</h3>${it.resumen ? `<p>${esc(it.resumen)}</p>` : ""}<span class="src">${esc(it.fuente || "Leer")}${it.de_pago ? " · de pago" : ""} ${u ? I.arrow : ""}</span>${u ? NEWTAB : ""}</div>`;
+      const cls = "glass story" + (th ? " with-thumb" : "");
+      return u ? `<a class="${cls}" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${inner}</a>` : `<div class="${cls}">${inner}</div>`;
     }).join("");
   }
   if (d.real_madrid_proximo) h += `<p class="small faint" style="margin:18px 4px 0">Próximo partido del Real Madrid: ${esc(d.real_madrid_proximo)}</p>`;
@@ -582,9 +673,9 @@ function renderEmpleo() {
     const k = jobKey(o), st = marks.get(k), u = safeUrl(o.url), jid = "job-" + idx;
     const tags = [o.nueva ? '<span class="label good">Nueva</span>' : "", ...arr(o.marcas).map(m => `<span class="label acc">${esc(m)}</span>`), o.tiro_largo ? '<span class="label">Tiro largo</span>' : "", o.ruta ? `<span class="label">${esc(o.ruta)}</span>` : ""].filter(Boolean).join("");
     return `<article class="glass job" aria-labelledby="${jid}">
-      ${tags ? `<div class="tags">${tags}</div>` : ""}
+      <div class="job-top">${logo(o)}<div><div class="who">${esc(o.empresa || "")}</div><p class="co">${esc(o.ciudad || "")}${o.publicada ? ` <span class="faint">· ${esc(o.publicada)}</span>` : ""}</p></div></div>
+      ${tags ? `<div class="tags" style="margin-top:14px">${tags}</div>` : ""}
       <h3 id="${jid}">${esc(o.puesto || "Oferta")}</h3>
-      <p class="co">${esc([o.empresa, o.ciudad].filter(Boolean).join(" · "))}${o.publicada ? ` <span class="faint">· ${esc(o.publicada)}</span>` : ""}</p>
       ${o.por_que ? `<p class="why">${esc(o.por_que)}</p>` : ""}
       ${o.sueldo ? `<p class="money">${esc(o.sueldo)}</p>` : ""}
       ${(o.punto_flojo || o.condiciones) ? `<details><summary>Más detalles</summary><dl>
