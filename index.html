@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi página</title>
+<meta name="description" content="Resúmenes diarios: correo, ofertas de trabajo, noticias y cambio euro-dólar.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mi página">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #f6f4ef;
+  --surface: #ffffff;
+  --surface-2: #efece5;
+  --ink: #1b1a17;
+  --ink-2: #57534b;
+  --ink-3: #7a756b;
+  --line: #e2ded4;
+  --accent: #1f5c4a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe4;
+  --good: #1d6b3f;   --good-bg: #ddf0e3;
+  --mid: #8a5a00;    --mid-bg: #f8ebcf;
+  --bad: #a3321f;    --bad-bg: #f9e0da;
+  --info: #234e8c;   --info-bg: #e0e9f7;
+  --focus: #2a63d4;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(20,18,14,.06), 0 2px 10px rgba(20,18,14,.04);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141414; --surface: #1e1e1d; --surface-2: #262624; --ink: #f1eee8; --ink-2: #c3beb4; --ink-3: #9a958b;
+    --line: #34332f; --accent: #7cc4a7; --accent-ink: #0f1a16; --accent-soft: #1f3a31;
+    --good: #8fd6a8; --good-bg: #1d3526; --mid: #f0c56e; --mid-bg: #3a2f17; --bad: #f2a08f; --bad-bg: #3f231d;
+    --info: #9dbcf0; --info-bg: #1d2a3f; --focus: #8fb4ff; --shadow: none; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141414; --surface: #1e1e1d; --surface-2: #262624; --ink: #f1eee8; --ink-2: #c3beb4; --ink-3: #9a958b;
+  --line: #34332f; --accent: #7cc4a7; --accent-ink: #0f1a16; --accent-soft: #1f3a31;
+  --good: #8fd6a8; --good-bg: #1d3526; --mid: #f0c56e; --mid-bg: #3a2f17; --bad: #f2a08f; --bad-bg: #3f231d;
+  --info: #9dbcf0; --info-bg: #1d2a3f; --focus: #8fb4ff; --shadow: none; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 72px; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  padding-bottom: calc(76px + env(safe-area-inset-bottom));
+}
+a { color: var(--accent); text-underline-offset: 2px; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+[tabindex="-1"]:focus { outline: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip { position: absolute; left: 8px; top: -60px; background: var(--ink); color: var(--bg); padding: 8px 12px; border-radius: 8px; z-index: 50; }
+.skip:focus { top: 8px; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+/* Cabecera */
+header.top { padding-top: calc(18px + env(safe-area-inset-top)); padding-bottom: 6px; }
+.top-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hello { font-size: 28px; line-height: 1.15; font-weight: 700; letter-spacing: -.02em; margin: 0; }
+.today { color: var(--ink-2); margin: 4px 0 0; }
+.icon-btn {
+  min-width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--line); background: var(--surface);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0 12px; gap: 6px;
+}
+.icon-btn svg { width: 20px; height: 20px; }
+.daybar { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; }
+.daybar select { flex: 1; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); padding: 0 12px; }
+
+/* Navegación inferior */
+nav.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom);
+}
+nav.tabs ul { list-style: none; margin: 0 auto; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); max-width: 760px; }
+nav.tabs a {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 58px;
+  color: var(--ink-3); text-decoration: none; font-size: 12px; font-weight: 600;
+}
+nav.tabs a svg { width: 22px; height: 22px; }
+nav.tabs a[aria-current="page"] { color: var(--accent); }
+
+/* Tarjetas y secciones */
+main section { padding: 18px 0 6px; }
+main section[hidden] { display: none; }
+h2.sec { font-size: 21px; letter-spacing: -.01em; margin: 6px 0 4px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.when { color: var(--ink-3); font-size: 13px; font-weight: 500; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin: 12px 0; }
+.card h3 { margin: 0 0 6px; font-size: 17px; line-height: 1.3; }
+.muted { color: var(--ink-2); }
+.small { font-size: 14px; }
+.lead { font-size: 17px; margin: 6px 0 0; }
+.empty { color: var(--ink-2); padding: 22px 16px; text-align: center; border: 1px dashed var(--line); border-radius: var(--radius); margin: 12px 0; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; letter-spacing: .02em; padding: 3px 8px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); }
+.pill.good { background: var(--good-bg); color: var(--good); }
+.pill.mid { background: var(--mid-bg); color: var(--mid); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); }
+.pill.info { background: var(--info-bg); color: var(--info); }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+
+/* Resumen de hoy */
+.overview { display: grid; gap: 12px; grid-template-columns: 1fr; margin-top: 8px; }
+@media (min-width: 620px) { .overview { grid-template-columns: 1fr 1fr; } }
+.ov { display: block; text-decoration: none; color: inherit; margin: 0; }
+.ov:hover { border-color: var(--ink-3); }
+.ov .ov-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.ov .ov-title { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.ov .ov-title svg { width: 18px; height: 18px; color: var(--accent); }
+.ov p { margin: 0; }
+.ov .big { font-size: 26px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+
+/* Cambio */
+.fx-top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.fx-rate { font-size: 40px; line-height: 1; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.fx-rate small { font-size: 15px; font-weight: 600; color: var(--ink-2); letter-spacing: 0; }
+.verdict { border-radius: 12px; padding: 12px 14px; margin: 14px 0 6px; font-weight: 600; }
+.verdict strong { display: block; font-size: 17px; letter-spacing: .01em; }
+.verdict.good { background: var(--good-bg); color: var(--good); }
+.verdict.mid { background: var(--mid-bg); color: var(--mid); }
+.verdict.bad { background: var(--bad-bg); color: var(--bad); }
+.verdict span { font-weight: 500; color: var(--ink); }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+.stat { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; }
+.stat b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--ink-2); }
+.up { color: var(--bad); } .down { color: var(--good); }
+.pbar { margin: 14px 0 4px; }
+.pbar-track { position: relative; height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--good-bg), var(--mid-bg) 50%, var(--bad-bg)); border: 1px solid var(--line); }
+.pbar-mark { position: absolute; top: -5px; width: 4px; height: 18px; border-radius: 2px; background: var(--ink); transform: translateX(-2px); }
+.pbar-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+figure.chart { margin: 14px 0 0; }
+figure.chart svg { width: 100%; height: auto; display: block; }
+figure.chart figcaption { font-size: 13px; color: var(--ink-2); margin-top: 6px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); min-height: 36px; padding: 0 12px; cursor: pointer; font-size: 14px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+
+/* Listas */
+ul.items { list-style: none; padding: 0; margin: 0; }
+ul.items > li { border-top: 1px solid var(--line); padding: 12px 0; }
+ul.items > li:first-child { border-top: 0; padding-top: 2px; }
+.item-title { font-weight: 650; }
+.item-meta { font-size: 13px; color: var(--ink-3); }
+.item-body { margin: 4px 0 0; color: var(--ink-2); }
+.row { display: flex; gap: 10px; align-items: flex-start; }
+.row > .grow { flex: 1; min-width: 0; }
+.check {
+  flex: none; width: 44px; height: 44px; margin: -8px -8px 0 0; border: 0; background: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; color: var(--ink-3);
+}
+.check svg { width: 24px; height: 24px; }
+.check[aria-pressed="true"] { color: var(--good); }
+li.done .item-title, li.done .item-body { opacity: .55; text-decoration: line-through; text-decoration-thickness: 1px; }
+.tag-urgent { color: var(--bad); font-weight: 700; }
+
+/* Empleo */
+.job h3 a { color: var(--ink); text-decoration: none; }
+.job h3 a:hover { text-decoration: underline; }
+.job dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 10px 0 0; font-size: 15px; }
+.job dt { color: var(--ink-3); font-weight: 600; font-size: 13px; padding-top: 2px; }
+.job dd { margin: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.btn {
+  min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--ink); font-weight: 600; font-size: 15px;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
+.btn svg { width: 18px; height: 18px; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0 0; }
+.job.discarded { opacity: .6; }
+
+/* Noticias */
+details.news { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); margin: 10px 0; box-shadow: var(--shadow); }
+details.news > summary { list-style: none; cursor: pointer; min-height: 52px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: 700; font-size: 17px; }
+details.news > summary::-webkit-details-marker { display: none; }
+details.news > summary .chev { transition: transform .15s; width: 20px; height: 20px; color: var(--ink-3); flex: none; }
+details.news[open] > summary .chev { transform: rotate(180deg); }
+details.news .news-body { padding: 0 16px 12px; }
+.top3 ol { margin: 0; padding-left: 22px; }
+.top3 li { margin: 6px 0; font-weight: 600; }
+.src { font-size: 13px; font-weight: 600; white-space: nowrap; }
+
+/* Login */
+.login { max-width: 400px; margin: 10vh auto 0; padding: 0 16px; }
+.login h1 { font-size: 30px; letter-spacing: -.02em; margin: 0 0 6px; }
+.field { display: block; margin: 14px 0; }
+.field span { display: block; font-weight: 600; margin-bottom: 6px; }
+.field input { width: 100%; min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); padding: 0 14px; font-size: 17px; }
+.msg { min-height: 24px; margin: 10px 0; }
+.msg.err { color: var(--bad); }
+.msg.ok { color: var(--good); }
+.linkish { background: none; border: 0; color: var(--accent); text-decoration: underline; cursor: pointer; padding: 10px 0; min-height: 44px; }
+
+.toast { position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 15px; z-index: 40; max-width: calc(100% - 32px); }
+.loading { text-align: center; color: var(--ink-2); padding: 40px 0; }
+</style>
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+
+<!-- Pantalla de acceso -->
+<div id="loginView" class="login" hidden>
+  <h1>Mi página</h1>
+  <p class="muted" id="loginIntro">Entra con tu correo y contraseña.</p>
+  <form id="loginForm" novalidate>
+    <label class="field"><span>Correo</span>
+      <input id="email" type="email" autocomplete="username" inputmode="email" required>
+    </label>
+    <label class="field"><span>Contraseña</span>
+      <input id="password" type="password" autocomplete="current-password" required minlength="8">
+    </label>
+    <p id="loginMsg" class="msg" role="status" aria-live="polite"></p>
+    <button class="btn primary" type="submit" id="loginBtn" style="width:100%;justify-content:center">Entrar</button>
+  </form>
+  <button class="linkish" type="button" id="toggleMode">¿Primera vez? Crear mi cuenta</button>
+</div>
+
+<!-- App -->
+<div id="appView" hidden>
+  <header class="top wrap">
+    <div class="top-row">
+      <div>
+        <h1 class="hello" id="hello">Hola, Javi</h1>
+        <p class="today" id="todayLabel"></p>
+      </div>
+      <button class="icon-btn" id="refreshBtn" type="button" aria-label="Actualizar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>
+      </button>
+    </div>
+    <div class="daybar">
+      <label for="daySel" class="sr-only">Día que quieres ver</label>
+      <select id="daySel"></select>
+    </div>
+  </header>
+
+  <main id="contenido" class="wrap" tabindex="-1">
+    <p class="loading" id="loading" role="status">Cargando…</p>
+
+    <section id="v-hoy" aria-labelledby="h-hoy" hidden>
+      <h2 class="sec sr-only" id="h-hoy">Resumen</h2>
+      <div class="overview" id="overview"></div>
+    </section>
+
+    <section id="v-correo" aria-labelledby="h-correo" hidden></section>
+    <section id="v-empleo" aria-labelledby="h-empleo" hidden></section>
+    <section id="v-noticias" aria-labelledby="h-noticias" hidden></section>
+    <section id="v-cambio" aria-labelledby="h-cambio" hidden></section>
+
+    <p class="small muted" style="text-align:center;margin:28px 0 8px">
+      <button class="linkish" type="button" id="themeBtn">Cambiar tema</button> ·
+      <button class="linkish" type="button" id="logoutBtn">Cerrar sesión</button>
+    </p>
+  </main>
+
+  <nav class="tabs" aria-label="Secciones">
+    <ul>
+      <li><a href="#hoy" data-v="hoy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Hoy</a></li>
+      <li><a href="#correo" data-v="correo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Correo</a></li>
+      <li><a href="#empleo" data-v="empleo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg>Empleo</a></li>
+      <li><a href="#noticias" data-v="noticias"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5"/></svg>Noticias</a></li>
+      <li><a href="#cambio" data-v="cambio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/></svg>€ / $</a></li>
+    </ul>
+  </nav>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+"use strict";
+// ---------- Configuración ----------
+const SUPABASE_URL = "https://mwsapcjzubisdszmwswp.supabase.co";
+const SUPABASE_KEY = "sb_publishable_oe1TNOb-Y-Lu3jYI8wr5XA_nLDluFOf"; // clave pública: los datos los protege la base de datos
+const TZ = "America/Chicago";
+
+let sb = null, digests = [], marks = new Map(), view = "hoy", day = "latest";
+let jobFilter = "todas", fxRange = 90;
+
+// ---------- Utilidades ----------
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const safeUrl = (u) => { try { const x = new URL(u); return (x.protocol === "https:" || x.protocol === "http:") ? x.href : ""; } catch { return ""; } };
+const link = (u, text, cls = "") => { const h = safeUrl(u); return h ? `<a class="${cls}" href="${esc(h)}" target="_blank" rel="noopener noreferrer">${esc(text)}<span class="sr-only"> (se abre en otra pestaña)</span></a>` : esc(text); };
+const num = (v, d = 4) => (typeof v === "number" && isFinite(v)) ? v.toLocaleString("es-ES", { minimumFractionDigits: d, maximumFractionDigits: d }) : "—";
+const pct = (v) => (typeof v === "number" && isFinite(v)) ? (v > 0 ? "+" : "") + v.toLocaleString("es-ES", { maximumFractionDigits: 2 }) + " %" : "—";
+const arr = (v) => Array.isArray(v) ? v : [];
+
+function todayISO() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+}
+function dayLabel(iso, long = true) {
+  if (!iso) return "";
+  const t = todayISO();
+  const y = new Date(Date.parse(t + "T12:00:00Z") - 864e5).toISOString().slice(0, 10);
+  const d = new Date(iso + "T12:00:00Z");
+  const base = d.toLocaleDateString("es-ES", long ? { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" } : { day: "numeric", month: "short", timeZone: "UTC" });
+  if (iso === t) return "Hoy, " + base;
+  if (iso === y) return "Ayer, " + base;
+  return base.charAt(0).toUpperCase() + base.slice(1);
+}
+function timeLabel(ts) {
+  if (!ts) return "";
+  return new Date(ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
+}
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => (t.hidden = true), 2600);
+}
+
+// ---------- Tema ----------
+(function initTheme() {
+  try { const t = localStorage.getItem("mp-theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+})();
+$("#themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem("mp-theme", next); } catch {}
+});
+
+// ---------- Acceso ----------
+let signUpMode = false;
+$("#toggleMode").addEventListener("click", () => {
+  signUpMode = !signUpMode;
+  $("#loginBtn").textContent = signUpMode ? "Crear cuenta" : "Entrar";
+  $("#toggleMode").textContent = signUpMode ? "Ya tengo cuenta, entrar" : "¿Primera vez? Crear mi cuenta";
+  $("#loginIntro").textContent = signUpMode ? "Elige una contraseña de al menos 8 caracteres." : "Entra con tu correo y contraseña.";
+  $("#password").autocomplete = signUpMode ? "new-password" : "current-password";
+  $("#loginMsg").textContent = "";
+});
+$("#loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = $("#email").value.trim(), password = $("#password").value;
+  const msg = $("#loginMsg"); msg.className = "msg";
+  if (!email || password.length < 8) { msg.classList.add("err"); msg.textContent = "Pon tu correo y una contraseña de al menos 8 caracteres."; return; }
+  $("#loginBtn").disabled = true; msg.textContent = signUpMode ? "Creando cuenta…" : "Entrando…";
+  try {
+    if (signUpMode) {
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if (error) throw error;
+      if (!data.session) { msg.classList.add("ok"); msg.textContent = "Cuenta creada. Confirma desde el correo que te ha llegado y luego entra aquí."; return; }
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    }
+  } catch (err) {
+    msg.classList.add("err");
+    const m = String(err.message || err);
+    msg.textContent = /Invalid login/i.test(m) ? "Correo o contraseña incorrectos." : /not confirmed/i.test(m) ? "Falta confirmar el correo. Mira tu bandeja de entrada." : "No se pudo: " + m;
+  } finally { $("#loginBtn").disabled = false; }
+});
+$("#logoutBtn").addEventListener("click", async () => { await sb.auth.signOut(); });
+
+function showLogin() { $("#appView").hidden = true; $("#loginView").hidden = false; }
+function showApp() { $("#loginView").hidden = true; $("#appView").hidden = false; }
+
+// ---------- Datos ----------
+async function loadData() {
+  $("#loading").hidden = false;
+  const [d, m] = await Promise.all([
+    sb.from("digests").select("kind, run_date, created_at, headline, data").order("run_date", { ascending: false }).order("created_at", { ascending: false }).limit(240),
+    sb.from("item_marks").select("item_key, mark")
+  ]);
+  $("#loading").hidden = true;
+  if (d.error) { toast("No se pudieron cargar los datos"); console.error(d.error); return; }
+  digests = d.data || [];
+  marks = new Map((m.data || []).map(r => [r.item_key, r.mark]));
+  buildDaySelect();
+  render();
+}
+async function setMark(key, mark) {
+  const prev = marks.get(key);
+  if (prev === mark) { marks.delete(key); render(); const { error } = await sb.from("item_marks").delete().eq("item_key", key); if (error) { marks.set(key, prev); render(); toast("No se guardó"); } return; }
+  marks.set(key, mark); render();
+  const { error } = await sb.from("item_marks").upsert({ item_key: key, mark, updated_at: new Date().toISOString() });
+  if (error) { if (prev) marks.set(key, prev); else marks.delete(key); render(); toast("No se guardó"); }
+}
+
+function buildDaySelect() {
+  const sel = $("#daySel");
+  const dates = [...new Set(digests.map(r => r.run_date))];
+  sel.innerHTML = `<option value="latest">Lo más reciente de cada cosa</option>` + dates.map(d => `<option value="${esc(d)}">${esc(dayLabel(d))}</option>`).join("");
+  if (day !== "latest" && !dates.includes(day)) day = "latest";
+  sel.value = day;
+}
+$("#daySel").addEventListener("change", (e) => { day = e.target.value; render(); });
+
+function pick(kind) {
+  const rows = digests.filter(r => r.kind === kind);
+  if (day === "latest") return rows[0] || null;
+  return rows.find(r => r.run_date === day) || null;
+}
+
+// ---------- Navegación ----------
+const VIEWS = ["hoy", "correo", "empleo", "noticias", "cambio"];
+function setView(v, focus) {
+  view = VIEWS.includes(v) ? v : "hoy";
+  document.querySelectorAll("nav.tabs a").forEach(a => { if (a.dataset.v === view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  VIEWS.forEach(x => { $("#v-" + x).hidden = x !== view; });
+  window.scrollTo(0, 0);
+  if (focus) { const h = $("#v-" + view + " h2"); if (h) { h.setAttribute("tabindex", "-1"); h.focus({ preventScroll: true }); } }
+}
+window.addEventListener("hashchange", () => setView(location.hash.slice(1), true));
+
+// ---------- Pintado ----------
+const ICON = {
+  correo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+  empleo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>',
+  noticias: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M8 9h5M8 13h5"/></svg>',
+  cambio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 17l5-5 4 3 7-8"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>',
+  checkOn: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M8 12.5l2.5 2.5L16 9.5" fill="none" stroke="var(--surface)" stroke-width="2.2"/></svg>',
+  chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>',
+  ext: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+};
+const VERD = { bueno: ["good", "Buen día para cambiar"], normal: ["mid", "Normal, cambia si lo necesitas"], esperar: ["bad", "Mejor esperar un poco"] };
+
+function render() {
+  const h = Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric", hourCycle: "h23" }).format(new Date()));
+  $("#hello").textContent = (h < 6 ? "Buenas noches" : h < 13 ? "Buenos días" : h < 21 ? "Buenas tardes" : "Buenas noches") + ", Javi";
+  $("#todayLabel").textContent = dayLabel(todayISO()).replace(/^Hoy, /, "").replace(/^./, c => c.toUpperCase());
+  renderOverview(); renderCorreo(); renderEmpleo(); renderNoticias(); renderCambio();
+}
+
+function whenTxt(r) { return r ? `${dayLabel(r.run_date, false)} · ${timeLabel(r.created_at)}` : ""; }
+function emptyBox(txt) { return `<p class="empty">${esc(txt)}</p>`; }
+
+function renderOverview() {
+  const c = pick("correo"), e = pick("empleo"), n = pick("noticias"), x = pick("cambio");
+  const cards = [];
+  // Cambio
+  if (x) {
+    const d = x.data || {}; const v = VERD[d.veredicto] || ["", d.veredicto_texto || ""];
+    cards.push(`<a class="card ov" href="#cambio"><div class="ov-head"><span class="ov-title">${ICON.cambio}Euro / dólar</span><span class="when">${esc(whenTxt(x))}</span></div>
+      <p class="big">1 € = ${num(d.eur_usd)} $</p><p style="margin-top:6px"><span class="pill ${v[0]}">${esc(d.veredicto_texto || v[1])}</span></p></a>`);
+  } else cards.push(`<a class="card ov" href="#cambio"><div class="ov-head"><span class="ov-title">${ICON.cambio}Euro / dólar</span></div><p class="muted">Sin datos todavía.</p></a>`);
+  // Correo
+  if (c) {
+    const d = c.data || {}; const urg = arr(d.urgente).length, imp = arr(d.importante).length;
+    cards.push(`<a class="card ov" href="#correo"><div class="ov-head"><span class="ov-title">${ICON.correo}Correo</span><span class="when">${esc(whenTxt(c))}</span></div>
+      <div class="pills">${urg ? `<span class="pill bad">${urg} urgente${urg > 1 ? "s" : ""}</span>` : ""}${imp ? `<span class="pill info">${imp} importante${imp > 1 ? "s" : ""}</span>` : ""}${arr(d.eventos_anadidos).length ? `<span class="pill good">${arr(d.eventos_anadidos).length} al calendario</span>` : ""}</div>
+      <p>${esc(c.headline || d.resumen || "")}</p></a>`);
+  } else cards.push(`<a class="card ov" href="#correo"><div class="ov-head"><span class="ov-title">${ICON.correo}Correo</span></div><p class="muted">Sin datos todavía.</p></a>`);
+  // Empleo
+  if (e) {
+    const d = e.data || {}; const of = arr(d.ofertas); const nuevas = of.filter(o => o.nueva).length;
+    cards.push(`<a class="card ov" href="#empleo"><div class="ov-head"><span class="ov-title">${ICON.empleo}Empleo</span><span class="when">${esc(whenTxt(e))}</span></div>
+      <div class="pills"><span class="pill">${of.length} oferta${of.length === 1 ? "" : "s"}</span>${nuevas ? `<span class="pill good">${nuevas} nueva${nuevas > 1 ? "s" : ""}</span>` : ""}</div>
+      <p>${esc(e.headline || d.resumen || "")}</p></a>`);
+  } else cards.push(`<a class="card ov" href="#empleo"><div class="ov-head"><span class="ov-title">${ICON.empleo}Empleo</span></div><p class="muted">Sin datos todavía.</p></a>`);
+  // Noticias
+  if (n) {
+    const d = n.data || {};
+    const top = arr(d.destacadas).slice(0, 3).map(t => `<li>${esc(t.titulo)}</li>`).join("");
+    cards.push(`<a class="card ov" href="#noticias"><div class="ov-head"><span class="ov-title">${ICON.noticias}Noticias</span><span class="when">${esc(whenTxt(n))}</span></div>
+      ${top ? `<ol class="small" style="margin:0;padding-left:20px">${top}</ol>` : `<p>${esc(n.headline || "")}</p>`}</a>`);
+  } else cards.push(`<a class="card ov" href="#noticias"><div class="ov-head"><span class="ov-title">${ICON.noticias}Noticias</span></div><p class="muted">Sin datos todavía.</p></a>`);
+  $("#overview").innerHTML = cards.join("");
+}
+
+function head(id, title, r) {
+  return `<h2 class="sec" id="h-${id}">${esc(title)} ${r ? `<span class="when">${esc(whenTxt(r))}</span>` : ""}</h2>`;
+}
+
+// Correo
+function mailItem(it, key, urgent) {
+  const done = marks.get(key) === "hecho";
+  return `<li class="${done ? "done" : ""}"><div class="row"><div class="grow">
+    <div class="item-title">${urgent ? '<span class="tag-urgent">Urgente · </span>' : ""}${esc(it.asunto || it.titulo || "")}</div>
+    <div class="item-meta">${esc([it.de, it.fecha_limite ? "Límite: " + it.fecha_limite : ""].filter(Boolean).join(" · "))}</div>
+    ${it.detalle ? `<p class="item-body">${esc(it.detalle)}</p>` : ""}
+    ${it.accion ? `<p class="item-body"><b>Qué hacer:</b> ${esc(it.accion)}</p>` : ""}
+  </div><button class="check" type="button" data-mark="${esc(key)}" data-val="hecho" aria-pressed="${done}" aria-label="Marcar como hecho: ${esc(it.asunto || "")}">${done ? ICON.checkOn : ICON.check}</button></div></li>`;
+}
+function renderCorreo() {
+  const r = pick("correo"); const el = $("#v-correo");
+  if (!r) { el.innerHTML = head("correo", "Correo") + emptyBox(day === "latest" ? "Aún no hay resumen del correo. Llega cada noche a las 21:00." : "Ese día no hubo resumen del correo."); return; }
+  const d = r.data || {}; const base = "correo:" + r.run_date + ":";
+  let h = head("correo", "Correo", r);
+  h += `<div class="card"><p class="lead">${esc(d.resumen || r.headline || "")}</p>${d.revisados ? `<p class="small muted" style="margin:6px 0 0">${esc(d.revisados)} correos revisados.</p>` : ""}</div>`;
+  const u = arr(d.urgente), i = arr(d.importante), o = arr(d.otros);
+  if (u.length || i.length) {
+    h += `<div class="card"><h3>Para atender</h3><ul class="items">${u.map((x, k) => mailItem(x, base + "u" + k, true)).join("")}${i.map((x, k) => mailItem(x, base + "i" + k, false)).join("")}</ul></div>`;
+  }
+  if (o.length) h += `<div class="card"><h3>Para que lo sepas</h3><ul class="items">${o.map((x, k) => mailItem(x, base + "o" + k, false)).join("")}</ul></div>`;
+  const ea = arr(d.eventos_anadidos), ep = arr(d.eventos_pendientes);
+  if (ea.length || ep.length) {
+    h += `<div class="card"><h3>Calendario</h3><ul class="items">
+      ${ea.map(x => `<li><div class="item-title">${esc(x.titulo)}</div><div class="item-meta">Añadido · ${esc(x.cuando || "")}${x.origen ? " · de: " + esc(x.origen) : ""}</div></li>`).join("")}
+      ${ep.map(x => `<li><div class="item-title">${esc(x.titulo)}</div><div class="item-meta"><span class="tag-urgent">No añadido</span> · ${esc(x.motivo || "")}</div></li>`).join("")}
+    </ul></div>`;
+  }
+  el.innerHTML = h;
+}
+
+// Empleo
+function jobKey(o) { return "empleo:" + (safeUrl(o.url) || (o.empresa + "|" + o.puesto)); }
+function renderEmpleo() {
+  const r = pick("empleo"); const el = $("#v-empleo");
+  let h = head("empleo", "Empleo", r);
+  // Guardadas de cualquier día
+  const saved = new Map();
+  digests.filter(x => x.kind === "empleo").forEach(x => arr(x.data?.ofertas).forEach(o => { const k = jobKey(o); if (marks.get(k) === "guardada" && !saved.has(k)) saved.set(k, o); }));
+  h += `<div class="filters" role="group" aria-label="Filtrar ofertas"><div class="seg">
+    <button type="button" data-jf="todas" aria-pressed="${jobFilter === "todas"}">Del día</button>
+    <button type="button" data-jf="guardadas" aria-pressed="${jobFilter === "guardadas"}">Guardadas (${saved.size})</button></div></div>`;
+  let list = [];
+  if (jobFilter === "guardadas") list = [...saved.values()];
+  else if (r) { h += `<div class="card"><p class="lead">${esc(r.data?.resumen || r.headline || "")}</p></div>`; list = arr(r.data?.ofertas); }
+  if (jobFilter === "todas" && !r) { el.innerHTML = h + emptyBox(day === "latest" ? "Aún no hay búsqueda de empleo. Llega cada mañana." : "Ese día no hubo búsqueda de empleo."); return; }
+  if (!list.length) h += emptyBox(jobFilter === "guardadas" ? "No tienes ofertas guardadas. Usa «Guardar» en las que te interesen." : "Hoy no había ofertas que merezcan la pena.");
+  const visible = list.filter(o => marks.get(jobKey(o)) !== "descartada");
+  const hidden = list.length - visible.length;
+  h += visible.map((o, idx) => {
+    const k = jobKey(o), st = marks.get(k), jid = "job-" + idx;
+    const marcas = arr(o.marcas).map(m => `<span class="pill info">${esc(m)}</span>`).join("");
+    return `<article class="card job" aria-labelledby="${jid}">
+      <div class="pills">${o.nueva ? '<span class="pill good">Nueva</span>' : ""}${o.ruta ? `<span class="pill">${esc(o.ruta)}</span>` : ""}${marcas}${o.tiro_largo ? '<span class="pill mid">Tiro largo</span>' : ""}</div>
+      <h3 id="${jid}">${link(o.url, o.puesto || "Oferta")}</h3>
+      <p class="muted" style="margin:0">${esc([o.empresa, o.ciudad && o.pais ? o.ciudad + ", " + o.pais : (o.ciudad || o.pais), o.publicada ? "publicada " + o.publicada : ""].filter(Boolean).join(" · "))}</p>
+      <dl>
+        ${o.por_que ? `<dt>Encaja</dt><dd>${esc(o.por_que)}</dd>` : ""}
+        ${o.punto_flojo ? `<dt>Ojo</dt><dd>${esc(o.punto_flojo)}</dd>` : ""}
+        ${o.sueldo ? `<dt>Sueldo</dt><dd>${esc(o.sueldo)}</dd>` : ""}
+        ${o.condiciones ? `<dt>Condiciones</dt><dd>${esc(o.condiciones)}</dd>` : ""}
+      </dl>
+      <div class="actions">
+        ${safeUrl(o.url) ? `<a class="btn primary" href="${esc(safeUrl(o.url))}" target="_blank" rel="noopener noreferrer">${ICON.ext}Ver oferta<span class="sr-only"> ${esc(o.puesto || "")} (se abre en otra pestaña)</span></a>` : ""}
+        <button class="btn" type="button" data-mark="${esc(k)}" data-val="guardada" aria-pressed="${st === "guardada"}">${ICON.star}${st === "guardada" ? "Guardada" : "Guardar"}</button>
+        <button class="btn" type="button" data-mark="${esc(k)}" data-val="descartada" aria-pressed="false">Descartar</button>
+      </div></article>`;
+  }).join("");
+  if (hidden) h += `<p class="small muted">${hidden} oferta${hidden > 1 ? "s" : ""} descartada${hidden > 1 ? "s" : ""} oculta${hidden > 1 ? "s" : ""}. <button class="linkish" type="button" data-undiscard="1">Mostrarlas otra vez</button></p>`;
+  const li = jobFilter === "todas" && r ? arr(r.data?.linkedin_sin_verificar) : [];
+  if (li.length) h += `<details class="news"><summary>De tus alertas de LinkedIn (sin verificar) ${ICON.chev}</summary><div class="news-body"><ul class="items">${li.map(x => `<li><div class="item-title">${link(x.url, x.puesto || "Oferta")}</div><div class="item-meta">${esc(x.empresa || "")}</div></li>`).join("")}</ul></div></details>`;
+  if (jobFilter === "todas" && r?.data?.notas) h += `<p class="small muted">${esc(r.data.notas)}</p>`;
+  el.innerHTML = h;
+  el._list = list;
+}
+
+// Noticias
+function renderNoticias() {
+  const r = pick("noticias"); const el = $("#v-noticias");
+  if (!r) { el.innerHTML = head("noticias", "Noticias") + emptyBox(day === "latest" ? "Aún no hay resumen de noticias. Llega cada mañana." : "Ese día no hubo resumen de noticias."); return; }
+  const d = r.data || {};
+  let h = head("noticias", "Noticias", r);
+  const top = arr(d.destacadas);
+  if (top.length) h += `<div class="card top3"><h3>Lo más importante</h3><ol>${top.map(t => `<li>${link(t.url, t.titulo)}${t.fuente ? ` <span class="src muted">· ${esc(t.fuente)}</span>` : ""}</li>`).join("")}</ol></div>`;
+  h += arr(d.secciones).map((s, i) => {
+    const items = arr(s.items);
+    return `<details class="news" ${i < 2 ? "open" : ""}><summary><span>${esc(s.nombre)} <span class="when">${items.length ? items.length : ""}</span></span>${ICON.chev}</summary><div class="news-body">
+      ${s.nota ? `<p class="muted small" style="margin-top:0">${esc(s.nota)}</p>` : ""}
+      <ul class="items">${items.map(it => `<li><div class="item-title">${esc(it.titulo)}</div>${it.resumen ? `<p class="item-body">${esc(it.resumen)}</p>` : ""}<div class="item-meta" style="margin-top:4px">${link(it.url, (it.fuente || "Leer") + (it.de_pago ? " (de pago)" : ""), "src")}</div></li>`).join("")}</ul>
+    </div></details>`;
+  }).join("");
+  if (d.real_madrid_proximo) h += `<p class="small muted">Próximo partido del Real Madrid: ${esc(d.real_madrid_proximo)}</p>`;
+  el.innerHTML = h;
+}
+
+// Cambio
+function chartSVG(serie, d) {
+  const pts = serie.filter(p => Array.isArray(p) && typeof p[1] === "number");
+  if (pts.length < 3) return "";
+  const W = 340, H = 150, P = { l: 6, r: 6, t: 10, b: 20 };
+  const vals = pts.map(p => p[1]); const lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo) * 0.08 || 0.001;
+  const y0 = lo - pad, y1 = hi + pad;
+  const X = i => P.l + (i / (pts.length - 1)) * (W - P.l - P.r);
+  const Y = v => P.t + (1 - (v - y0) / (y1 - y0)) * (H - P.t - P.b);
+  const path = pts.map((p, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(p[1]).toFixed(1)).join(" ");
+  const area = path + ` L${X(pts.length - 1).toFixed(1)} ${H - P.b} L${X(0).toFixed(1)} ${H - P.b} Z`;
+  const avg = d["media_" + fxRange] ?? (vals.reduce((a, b) => a + b, 0) / vals.length);
+  const last = pts[pts.length - 1];
+  const f = (s) => new Date(s + "T12:00:00Z").toLocaleDateString("es-ES", { day: "numeric", month: "short", timeZone: "UTC" });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="fxcap">
+    <defs><linearGradient id="fxg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".22"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#fxg)"/>
+    <line x1="${P.l}" x2="${W - P.r}" y1="${Y(avg).toFixed(1)}" y2="${Y(avg).toFixed(1)}" stroke="var(--ink-3)" stroke-dasharray="4 4" stroke-width="1"/>
+    <text x="${W - P.r}" y="${(Y(avg) - 4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ink-2)">media ${num(avg)}</text>
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${X(pts.length - 1).toFixed(1)}" cy="${Y(last[1]).toFixed(1)}" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>
+    <text x="${P.l}" y="${H - 5}" font-size="10" fill="var(--ink-3)">${esc(f(pts[0][0]))}</text>
+    <text x="${W - P.r}" y="${H - 5}" font-size="10" text-anchor="end" fill="var(--ink-3)">${esc(f(last[0]))}</text>
+    <text x="${P.l}" y="${P.t + 2}" font-size="10" fill="var(--ink-3)">${num(hi)}</text>
+    <text x="${P.l}" y="${H - P.b - 3}" font-size="10" fill="var(--ink-3)">${num(lo)}</text>
+  </svg>`;
+}
+function renderCambio() {
+  const r = pick("cambio"); const el = $("#v-cambio");
+  if (!r) { el.innerHTML = head("cambio", "Euro / dólar") + emptyBox(day === "latest" ? "Aún no hay datos del cambio. Llegan cada mañana con las noticias." : "Ese día no hubo datos del cambio."); return; }
+  const d = r.data || {}; const v = VERD[d.veredicto] || ["", d.veredicto_texto || "Sin veredicto"];
+  const pctl = typeof d["pct_" + fxRange] === "number" ? Math.max(0, Math.min(100, d["pct_" + fxRange])) : null;
+  const allSerie = arr(d.serie);
+  const serie = fxRange === 90 ? allSerie.slice(-63) : allSerie; // ~90 días naturales = ~63 días hábiles
+  const vcls = (x) => typeof x === "number" ? (x > 0 ? "up" : x < 0 ? "down" : "") : "";
+  let h = head("cambio", "Euro / dólar", r);
+  h += `<div class="card">
+    <div class="fx-top"><div><div class="fx-rate">${num(d.eur_usd)} <small>$ por 1 €</small></div>
+      <div class="muted small" style="margin-top:6px">1 $ = ${num(d.usd_eur)} € ${d.fecha_dato ? "· dato: " + esc(dayLabel(d.fecha_dato, false).toLowerCase()) : ""}</div></div></div>
+    <div class="verdict ${v[0]}" role="note"><strong>${esc(d.veredicto_texto || v[1])}</strong><span>${esc(d.razon || "")}</span></div>
+    <p class="small muted" style="margin:6px 0 0">Te conviene que el euro esté barato: cuantos menos dólares cueste cada euro, mejor para ti.</p>
+    <div class="grid3" aria-label="Variación del euro frente al dólar">
+      <div class="stat"><b class="${vcls(d.var_1d)}">${pct(d.var_1d)}</b><span>vs ayer</span></div>
+      <div class="stat"><b class="${vcls(d.var_7d)}">${pct(d.var_7d)}</b><span>vs hace 7 días</span></div>
+      <div class="stat"><b class="${vcls(d.var_30d)}">${pct(d.var_30d)}</b><span>vs hace 30 días</span></div>
+    </div>
+    <p class="small muted" style="margin:-4px 0 8px">En rojo cuando el euro sube (peor para ti), en verde cuando baja.</p>
+    <div class="filters"><span class="small muted">Periodo</span><div class="seg" role="group" aria-label="Periodo">
+      <button type="button" data-fx="90" aria-pressed="${fxRange === 90}">90 días</button>
+      <button type="button" data-fx="365" aria-pressed="${fxRange === 365}">1 año</button></div></div>
+    ${pctl !== null ? `<div class="pbar"><div class="small" style="margin-bottom:6px"><b>Percentil ${Math.round(pctl)}</b> de los últimos ${fxRange === 90 ? "90 días" : "12 meses"}</div>
+      <div class="pbar-track" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pctl)}" aria-label="Percentil del cambio de hoy"><div class="pbar-mark" style="left:${pctl}%"></div></div>
+      <div class="pbar-labels"><span>Euro barato (mejor)</span><span>Euro caro (peor)</span></div></div>` : ""}
+    <div class="grid3">
+      <div class="stat"><b>${num(d.eur_usd)}</b><span>hoy</span></div>
+      <div class="stat"><b>${num(d["media_" + (fxRange === 90 ? 30 : 90)])}</b><span>media ${fxRange === 90 ? "30" : "90"} días</span></div>
+      <div class="stat"><b>${num(d["media_" + fxRange])}</b><span>media ${fxRange === 90 ? "90 días" : "1 año"}</span></div>
+    </div>
+    <div class="grid3" style="grid-template-columns:1fr 1fr;margin-top:-4px">
+      <div class="stat"><b>${num(d["min_" + fxRange])}</b><span>mínimo</span></div>
+      <div class="stat"><b>${num(d["max_" + fxRange])}</b><span>máximo</span></div>
+    </div>
+    ${serie.length > 2 ? `<figure class="chart">${chartSVG(serie, d)}<figcaption id="fxcap">Euro en dólares, ${fxRange === 90 ? "últimos 90 días" : "último año"}. Hoy ${num(d.eur_usd)}; la línea discontinua es la media.</figcaption></figure>` : ""}
+    ${d.tendencia ? `<p style="margin:12px 0 0"><b>Tendencia:</b> ${esc(d.tendencia)}</p>` : ""}
+    ${d.contexto ? `<p style="margin:8px 0 0"><b>Esta semana:</b> ${esc(d.contexto)}</p>` : ""}
+    <p class="small muted" style="margin:12px 0 0">Es una lectura del histórico, no una predicción. Lo que pagas de verdad depende del tipo y la comisión de tu servicio de envío. ${d.fuente_url ? "Fuente: " + link(d.fuente_url, d.fuente_nombre || "ver") : ""}</p>
+  </div>`;
+  el.innerHTML = h;
+}
+
+// Delegación de clics
+document.addEventListener("click", (e) => {
+  const m = e.target.closest("[data-mark]");
+  if (m) { setMark(m.dataset.mark, m.dataset.val); if (m.dataset.val === "descartada") toast("Oferta descartada"); return; }
+  const jf = e.target.closest("[data-jf]"); if (jf) { jobFilter = jf.dataset.jf; renderEmpleo(); return; }
+  const fx = e.target.closest("[data-fx]"); if (fx) { fxRange = Number(fx.dataset.fx); renderCambio(); return; }
+  const ud = e.target.closest("[data-undiscard]");
+  if (ud) { (($("#v-empleo")._list) || []).forEach(o => { const k = jobKey(o); if (marks.get(k) === "descartada") setMark(k, "descartada"); }); }
+});
+$("#refreshBtn").addEventListener("click", async () => { await loadData(); toast("Actualizado"); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !$("#appView").hidden) loadData(); });
+
+// ---------- Arranque ----------
+(async function start() {
+  if (!window.supabase) { document.body.innerHTML = '<p class="wrap" style="padding:40px 16px">No se pudo cargar la librería. Revisa tu conexión y recarga.</p>'; return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "mi-pagina-auth" } });
+  sb.auth.onAuthStateChange((ev, session) => {
+    if (ev === "SIGNED_OUT") { digests = []; showLogin(); }
+    else if (ev === "SIGNED_IN" && session && $("#appView").hidden) { showApp(); setView(location.hash.slice(1)); loadData(); }
+  });
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { showApp(); setView(location.hash.slice(1)); loadData(); } else showLogin();
+})();
+</script>
+</body>
+</html>
