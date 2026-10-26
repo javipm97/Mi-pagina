@@ -55,3 +55,11 @@ Página personal con los resúmenes diarios: correo, ofertas de trabajo, noticia
  "razon": "", "tendencia": "", "contexto": "", "fuente_nombre": "", "fuente_url": "",
  "serie": [["2026-10-16", 1.0842]]}
 ```
+
+## Boda (`/boda/`)
+
+Página de solo lectura para que las familias de Javier y Laura sigan la búsqueda de finca. Es un `boda/index.html` suelto, sin compilar.
+
+- **Datos:** tablas `boda_docs`, `boda_acceso` y `boda_intentos` del mismo proyecto de Supabase. Ninguna se puede leer directamente: la página llama a la función `boda_leer(clave)`, que comprueba la clave y devuelve los datos. Tras 10 claves erróneas en 10 minutos se bloquea unos minutos.
+- **La clave no está en este repositorio.** Solo se guarda su hash en la base de datos.
+- **Actualizar los datos:** los pide Javier a Claude, que vuelve a cargar `boda_docs` desde el panel de la boda.
