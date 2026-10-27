@@ -146,6 +146,14 @@ details[open] summary{margin-bottom:8px}
 .pill.est.fav{background:var(--wine-soft);color:var(--wine)}
 .vote-row .dot{cursor:default}
 .visita{font-size:.85rem;color:var(--muted)}
+.edit-badge{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--wine-soft);color:var(--wine);margin-left:8px;vertical-align:middle}
+.editbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;padding:10px 14px;background:var(--wine-soft);border-radius:var(--r);color:var(--wine);font-weight:500}
+.editbar button[aria-pressed="true"]{background:var(--wine);border-color:var(--wine);color:var(--bg);font-weight:600}
+.dot.edit{cursor:pointer}
+.ed{display:grid;gap:3px;font-size:.76rem;color:var(--muted)}
+.ed input,.ed select,.ed textarea{width:100%;box-sizing:border-box;font-size:.88rem}
+.ed textarea{min-height:56px}
+.saved{color:var(--ok)}
 .dec .opin{background:var(--sunk);border-radius:8px;padding:8px 10px;font-size:.88rem;white-space:pre-wrap;overflow-wrap:anywhere}
 .dec .opin b{display:block;font-size:.74rem;color:var(--muted);font-weight:600;margin-bottom:2px}
 .task .quien{font-size:.82rem;color:var(--muted)}
@@ -173,13 +181,18 @@ details[open] summary{margin-bottom:8px}
   </section>
 
   <div id="app" hidden>
+    <div class="editbar" id="editbar" hidden>
+      <span>Modo edición. Estás votando como:</span>
+      <button type="button" data-yo="javier" aria-pressed="false">Javier</button>
+      <button type="button" data-yo="laura" aria-pressed="false">Laura</button>
+    </div>
     <nav class="tabs" role="tablist">
       <button role="tab" data-tab="fincas" aria-selected="true">Fincas<span class="count" id="c-fincas"></span></button>
       <button role="tab" data-tab="decisiones" aria-selected="false">Decisiones<span class="count" id="c-decisiones"></span></button>
       <button role="tab" data-tab="tareas" aria-selected="false">Tareas<span class="count" id="c-tareas"></span></button>
     </nav>
     <main id="view"></main>
-    <p class="foot">Esta página es solo para consultar: los cambios los hacen Javier y Laura. Los tiempos desde la parroquia de Santa Bárbara son aproximados, en coche y sin tráfico de sábado por la tarde. Los precios por invitado son orientativos hasta que cada finca envíe su dosier.</p>
+    <p class="foot" id="footTxt">Esta página es solo para consultar: los cambios los hacen Javier y Laura. Los tiempos desde la parroquia de Santa Bárbara son aproximados, en coche y sin tráfico de sábado por la tarde. Los precios por invitado son orientativos hasta que cada finca envíe su dosier.</p>
     <p><button type="button" class="btn-ghost small" id="logout">Salir</button></p>
   </div>
 </div>
@@ -190,7 +203,8 @@ details[open] summary{margin-bottom:8px}
   const SUPABASE_URL="https://mwsapcjzubisdszmwswp.supabase.co";
   const SUPABASE_KEY="sb_publishable_oe1TNOb-Y-Lu3jYI8wr5XA_nLDluFOf";
   const FICHA=[["precioTxt","Precio"],["tiempo","Desde Santa Bárbara"],["incluye","Qué incluye"],["minimo","Invitados"],["opiniones","Opiniones"],["importante","Para vosotros"]];
-  const S={fincas:[],decisiones:[],tareas:[],updated:null};
+  const S={fincas:[],decisiones:[],tareas:[],updated:null,rol:"lector",pw:""};
+  const YO={w:(function(){try{return localStorage.getItem("boda-yo")||"";}catch(e){return "";}})()};
   const UI={tab:"fincas",filter:"Todas",hideDiscarded:true,sort:"votos"};
   const ESTADOS=["Por contactar","Correo listo","Correo enviado","Han respondido","Visita prevista","Visitada","Favorita","Descartada"];
 
@@ -217,6 +231,23 @@ details[open] summary{margin-bottom:8px}
     }
     return j;
   }
+  async function rpc(fn,body){
+    let r;
+    try{ r=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify(body)}); }
+    catch(e){ throw new Error("red"); }
+    const j=await r.json().catch(()=>null);
+    if(!r.ok){ const m=(j&&j.message)||""; throw new Error(m.includes("clave_incorrecta")?"clave":m.includes("demasiados_intentos")?"intentos":"servidor"); }
+    return j;
+  }
+  const editor=()=>S.rol==="editor";
+  function setStatus(msg,err){ const el=$("#saveStatus"); if(el){ el.textContent=msg; el.className="status"+(err?" err":" saved"); } }
+  async function guardar(col,id,patch){
+    const lista=S[col]; const o=lista.find(x=>x.id===id);
+    if(!o) return;
+    Object.assign(o,patch);
+    try{ await rpc("boda_guardar",{p_password:S.pw,p_coleccion:col,p_id:id,p_data:patch}); setStatus("Guardado"); }
+    catch(e){ setStatus(e.message==="intentos"?"Demasiados intentos, espera 10 minutos.":"No se ha podido guardar. Recarga e inténtalo otra vez.",true); }
+  }
   function aplicar(rows){
     S.fincas=[];S.decisiones=[];S.tareas=[];S.updated=null;
     for(const r of rows){
@@ -232,7 +263,7 @@ details[open] summary{margin-bottom:8px}
     render();
   }
   async function entrar(pw,esAuto){
-    try{ aplicar(await cargar(pw)); setPw(pw); mostrarApp(); }
+    try{ const rows=await cargar(pw); S.rol=await rpc("boda_rol",{p_password:pw}); S.pw=pw; aplicar(rows); setPw(pw); mostrarApp(); }
     catch(e){
       if(e.message==="clave"){ setPw(""); mostrarLogin(esAuto?"":"La clave no es correcta."); }
       else if(e.message==="intentos") mostrarLogin("Demasiados intentos. Espera 10 minutos y vuelve a probar.");
@@ -253,7 +284,8 @@ details[open] summary{margin-bottom:8px}
   }
   function voteRow(f,w){
     const v=Number((f.votos||{})[w])||0; let dots="";
-    for(let i=1;i<=5;i++) dots+=`<span class="dot ${i<=v?"on":""}" aria-hidden="true"></span>`;
+    const can=editor()&&YO.w===w;
+    for(let i=1;i<=5;i++) dots+=can?`<button type="button" class="dot edit ${i<=v?"on":""}" data-act="vote" data-id="${esc(f.id)}" data-v="${i}" aria-label="${i} de 5"></button>`:`<span class="dot ${i<=v?"on":""}" aria-hidden="true"></span>`;
     return `<div class="vote-row"><span class="name">${nm(w)}</span><span class="dots" role="img" aria-label="${nm(w)}: ${v?v+" de 5":"sin votar"}">${dots}</span><span class="small muted num">${v?v+"/5":"sin votar"}</span></div>`;
   }
   function fincaCard(f){
@@ -261,9 +293,10 @@ details[open] summary{margin-bottom:8px}
     const fotos=safeUrl(f.fotos), web=safeUrl(f.web);
     return `<article class="card ${cls}">
       <div class="card-head"><div><h3>${esc(f.nombre)}</h3><div class="zona">${esc(f.zona||"")}</div></div>
-        <span class="pill est ${f.estado==="Favorita"?"fav":""}">${esc(f.estado||"")}</span></div>
+        ${editor()?`<select class="ed-sel" data-act="estado" data-id="${esc(f.id)}" aria-label="Estado">${ESTADOS.map(e=>`<option ${e===f.estado?"selected":""}>${e}</option>`).join("")}</select>`:`<span class="pill est ${f.estado==="Favorita"?"fav":""}">${esc(f.estado||"")}</span>`}</div>
       <div class="votes">${voteRow(f,"javier")}${voteRow(f,"laura")}</div>
       <dl class="ficha">${FICHA.map(([k,l])=>`<div><dt>${l}</dt><dd>${f[k]?esc(f[k]):'<span class="muted">Por confirmar</span>'}</dd></div>`).join("")}</dl>
+      ${editor()?`<div class="ed-grid" style="display:grid;gap:8px"><label class="ed">Precio<textarea data-act="txt" data-id="${esc(f.id)}" data-k="precioTxt">${esc(f.precioTxt||"")}</textarea></label><label class="ed">Para vosotros (notas)<textarea data-act="txt" data-id="${esc(f.id)}" data-k="importante">${esc(f.importante||"")}</textarea></label><label class="ed">Fecha de visita<input type="date" data-act="visita" data-id="${esc(f.id)}" value="${esc(f.visita||"")}"></label></div>`:""}
       <div class="row2">
         ${f.visita?`<span class="visita">Visita: ${esc(new Date(f.visita+"T12:00:00").toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"}))}</span>`:""}
         ${fotos?`<a class="fotos" href="${esc(fotos)}" target="_blank" rel="noopener noreferrer">Ver fotos ↗</a>`:""}
@@ -289,27 +322,57 @@ details[open] summary{margin-bottom:8px}
     const cards=list.map(d=>`<article class="card dec">
       <div class="card-head"><div><h3>${esc(d.titulo)}</h3>${d.contexto?`<div class="zona" style="margin-top:4px">${esc(d.contexto)}</div>`:""}</div>
         <span class="pill ${d.decision?"done":"open"}">${d.decision?"Decidido":"Pendiente"}</span></div>
-      ${(d.javier||d.laura)?`<div class="opins">${d.javier?`<div class="opin"><b>Javier opina</b>${esc(d.javier)}</div>`:""}${d.laura?`<div class="opin"><b>Laura opina</b>${esc(d.laura)}</div>`:""}</div>`:""}
-      ${d.decision?`<div><span class="small muted">Decisión</span><div>${esc(d.decision)}</div></div>`:""}
+      ${editor()?`<div class="opins"><label class="ed">Javier opina<textarea data-act="dec" data-col="decisiones" data-id="${esc(d.id)}" data-k="javier">${esc(d.javier||"")}</textarea></label><label class="ed">Laura opina<textarea data-act="dec" data-col="decisiones" data-id="${esc(d.id)}" data-k="laura">${esc(d.laura||"")}</textarea></label></div><label class="ed">Decisión final<textarea data-act="dec" data-col="decisiones" data-id="${esc(d.id)}" data-k="decision">${esc(d.decision||"")}</textarea></label>`:""}
+      ${(!editor()&&(d.javier||d.laura))?`<div class="opins">${d.javier?`<div class="opin"><b>Javier opina</b>${esc(d.javier)}</div>`:""}${d.laura?`<div class="opin"><b>Laura opina</b>${esc(d.laura)}</div>`:""}</div>`:""}
+      ${(!editor()&&d.decision)?`<div><span class="small muted">Decisión</span><div>${esc(d.decision)}</div></div>`:""}
     </article>`).join("");
     return `<div class="toolbar"><span class="muted small">Lo que Javier y Laura tienen que decidir.</span></div>${cards?`<div class="grid">${cards}</div>`:'<div class="empty">No hay decisiones abiertas.</div>'}`;
   }
   function viewTareas(){
     const list=S.tareas.slice().sort((a,b)=>(!!a.hecho)-(!!b.hecho)||String(a.fecha||"9999").localeCompare(String(b.fecha||"9999"))||(a.orden||99)-(b.orden||99));
     const rows=list.map(t=>`<div class="task ${t.hecho?"done":""}" style="grid-template-columns:auto 1fr auto auto">
-      <input type="checkbox" ${t.hecho?"checked":""} disabled aria-label="${t.hecho?"Hecha":"Pendiente"}">
+      <input type="checkbox" ${t.hecho?"checked":""} ${editor()?`data-act="tarea" data-id="${esc(t.id)}"`:"disabled"} aria-label="${t.hecho?"Hecha":"Pendiente"}">
       <span class="t">${esc(t.texto)}</span><span class="quien">${esc(t.quien||"")}</span>
       <span class="quien num">${t.fecha?esc(new Date(t.fecha+"T12:00:00").toLocaleDateString("es-ES",{day:"numeric",month:"short"})):""}</span></div>`).join("");
-    return `<div class="toolbar"><span class="muted small">${S.tareas.filter(t=>!t.hecho).length} pendientes · ${S.tareas.filter(t=>t.hecho).length} hechas</span></div>${rows?`<div class="tasks">${rows}</div>`:'<div class="empty">No hay tareas.</div>'}`;
+    return `<div class="toolbar"><span class="muted small">${S.tareas.filter(t=>!t.hecho).length} pendientes · ${S.tareas.filter(t=>t.hecho).length} hechas</span></div>${rows?`<div class="tasks">${rows}</div>`:'<div class="empty">No hay tareas.</div>'}${editor()?`<form class="addbar" id="addTarea"><input id="nt-texto" placeholder="Nueva tarea" required><select id="nt-quien"><option>Javier</option><option>Laura</option><option>Los dos</option><option>Familia</option></select><input id="nt-fecha" type="date"><button class="btn-primary" type="submit">Añadir</button></form>`:""}`;
   }
   function render(){
     renderHeader();
     const v={fincas:viewFincas,decisiones:viewDecisiones,tareas:viewTareas}[UI.tab]||viewFincas;
-    $("#view").innerHTML=v();
+    $("#view").innerHTML=v()+(editor()?'<div class="status" id="saveStatus" role="status"></div>':"");
+    $("#editbar").hidden=!editor();
+    document.querySelectorAll("#editbar [data-yo]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.yo===YO.w)));
+    if(editor()){ $("#footTxt").textContent="Modo edición: los cambios se guardan al momento y los ven también las familias. No se pueden borrar fincas desde aquí."; }
   }
   document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>{ UI.tab=b.dataset.tab; try{localStorage.setItem("boda-tab",UI.tab);}catch(e){} render(); }));
-  $("#view").addEventListener("click",e=>{ const b=e.target.closest('[data-act="filter"]'); if(b){ UI.filter=b.dataset.v; render(); } });
-  $("#view").addEventListener("change",e=>{ const el=e.target; if(el.dataset.act==="hide"){ UI.hideDiscarded=el.checked; render(); } else if(el.dataset.act==="sort"){ UI.sort=el.value; render(); } });
+  $("#view").addEventListener("click",e=>{
+    const b=e.target.closest('[data-act="filter"]'); if(b){ UI.filter=b.dataset.v; render(); return; }
+    const d=e.target.closest('[data-act="vote"]');
+    if(d&&editor()&&YO.w){
+      const f=S.fincas.find(x=>x.id===d.dataset.id); if(!f) return;
+      const n=Number(d.dataset.v); const actual=Number((f.votos||{})[YO.w])||0;
+      const votos={...(f.votos||{}),[YO.w]:actual===n?0:n};
+      guardar("fincas",f.id,{votos}).then(render);
+    }
+  });
+  $("#editbar").addEventListener("click",e=>{ const b=e.target.closest("[data-yo]"); if(!b) return; YO.w=b.dataset.yo; try{localStorage.setItem("boda-yo",YO.w);}catch(x){} render(); });
+  $("#view").addEventListener("submit",e=>{
+    if(e.target.id!=="addTarea") return; e.preventDefault();
+    const texto=$("#nt-texto").value.trim(); if(!texto) return;
+    const id="t"+Date.now().toString(36);
+    const o={id,texto,quien:$("#nt-quien").value,fecha:$("#nt-fecha").value||"",hecho:false,orden:99};
+    S.tareas.push(o);
+    rpc("boda_guardar",{p_password:S.pw,p_coleccion:"tareas",p_id:id,p_data:{texto:o.texto,quien:o.quien,fecha:o.fecha,hecho:false,orden:99}})
+      .then(()=>{render();setStatus("Guardado");}).catch(()=>{S.tareas.pop();render();setStatus("No se ha podido guardar la tarea.",true);});
+  });
+  $("#view").addEventListener("change",e=>{ const el=e.target; if(el.dataset.act==="hide"){ UI.hideDiscarded=el.checked; render(); } else if(el.dataset.act==="sort"){ UI.sort=el.value; render(); }
+    else if(!editor()) return;
+    else if(el.dataset.act==="estado"){ guardar("fincas",el.dataset.id,{estado:el.value}).then(render); }
+    else if(el.dataset.act==="visita"){ guardar("fincas",el.dataset.id,{visita:el.value}); }
+    else if(el.dataset.act==="txt"){ guardar("fincas",el.dataset.id,{[el.dataset.k]:el.value}); }
+    else if(el.dataset.act==="dec"){ guardar("decisiones",el.dataset.id,{[el.dataset.k]:el.value}); }
+    else if(el.dataset.act==="tarea"){ guardar("tareas",el.dataset.id,{hecho:el.checked}).then(render); }
+  });
 
   const guardada=getPw();
   if(guardada) entrar(guardada,true); else mostrarLogin("");
