@@ -66,7 +66,7 @@ Página de solo lectura para que las familias de Javier y Laura sigan la búsque
 
 ## Mapas (`/mapas/`)
 
-Entrenamiento diario para aprenderse los estados de EE. UU., Latinoamérica y Centroamérica: estudiar en el mapa, ejercicios (ubicar, nombrar, capitales, abreviaturas) y progreso. Tiene su propia pestaña en la barra de la página principal.
+Una pregunta cada vez sobre estados de EE. UU., Latinoamérica y Centroamérica (ubicar en el mapa, nombrar, capitales, abreviaturas), 10 al día, sin menús ni opciones. Pregunta más lo que se falla. Tiene su propia pestaña en la barra de la página principal.
 
 - **Un único `mapas/index.html`** con los mapas ya dibujados dentro (SVG generado a partir de `world-atlas` y `us-atlas`).
 - **Datos:** tabla `mapas_progreso` (una sola fila, `id = 'javi'`, con el progreso en `data`). Solo la lee y escribe la cuenta `javipm.97@gmail.com`. Usa la misma sesión que la página principal; sin sesión funciona igual pero guarda solo en el navegador.
