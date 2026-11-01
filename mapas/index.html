@@ -429,7 +429,21 @@ function createMap(host, key, opts = {}) {
 }
 
 /* ---------- preguntas ---------- */
-const TYPE_W = { us: [['find', 3], ['name', 2], ['cap', 2], ['caprev', 1], ['abbr', 2]], latam: [['find', 3], ['name', 2], ['cap', 2], ['caprev', 1]] };
+const CITIES = {
+  AL: ['Birmingham', 'Huntsville'], AK: ['Anchorage'], AZ: ['Phoenix', 'Tucson'], AR: ['Little Rock'],
+  CA: ['Los Angeles', 'San Francisco', 'San Diego', 'San José'], CO: ['Denver'], CT: ['New Haven', 'Bridgeport'], DE: ['Wilmington'],
+  FL: ['Miami', 'Orlando', 'Tampa', 'Jacksonville'], GA: ['Atlanta', 'Savannah'], HI: ['Honolulu'], ID: ['Boise'],
+  IL: ['Chicago'], IN: ['Indianapolis'], IA: ['Des Moines'], KS: ['Wichita'], KY: ['Louisville', 'Lexington'],
+  LA: ['Nueva Orleans', 'Baton Rouge'], ME: ['Bangor'], MD: ['Baltimore'], MA: ['Boston'], MI: ['Detroit', 'Grand Rapids'],
+  MN: ['Minneapolis'], MS: ['Jackson'], MO: ['St. Louis', 'Kansas City'], MT: ['Billings'], NE: ['Omaha'],
+  NV: ['Las Vegas', 'Reno'], NH: ['Manchester'], NJ: ['Newark', 'Atlantic City'], NM: ['Albuquerque', 'Santa Fe'],
+  NY: ['Nueva York', 'Buffalo'], NC: ['Charlotte', 'Raleigh'], ND: ['Fargo'], OH: ['Columbus', 'Cleveland', 'Cincinnati'],
+  OK: ['Oklahoma City', 'Tulsa'], OR: ['Portland'], PA: ['Filadelfia', 'Pittsburgh'], RI: ['Providence'], SC: ['Charleston', 'Myrtle Beach'],
+  SD: ['Sioux Falls'], TN: ['Nashville', 'Memphis'], TX: ['Houston', 'Dallas', 'San Antonio', 'Austin', 'El Paso'],
+  UT: ['Salt Lake City'], VT: ['Burlington'], VA: ['Virginia Beach', 'Richmond'], WA: ['Seattle', 'Spokane'],
+  WV: ['Huntington', 'Morgantown'], WI: ['Milwaukee', 'Madison'], WY: ['Cheyenne'],
+};
+const TYPE_W = { us: [['find', 3], ['name', 2], ['city', 4], ['abbr', 2]], latam: [['find', 3], ['name', 2], ['cap', 2], ['caprev', 1]] };
 function pickType(id) {
   const list = id.startsWith('US-') ? TYPE_W.us : TYPE_W.latam;
   let r = Math.random() * list.reduce((a, x) => a + x[1], 0);
@@ -452,15 +466,23 @@ function makeQ(id, type, group) {
   switch (type) {
     case 'find': return { id, type, mapKey, prompt: `¿Dónde está <em>${esc(fullName(it))}</em>? Tócalo en el mapa.` };
     case 'name': return { id, type, mapKey, prompt: `¿Qué ${it.kind} es el marcado en el mapa?`, options: opts(x => x.name) };
+    case 'city': {
+      const c = CITIES[it.abbr][rnd(CITIES[it.abbr].length)];
+      return Math.random() < 0.5
+        ? { id, type: 'find', city: c, mapKey, prompt: `¿En qué estado está <em>${esc(c)}</em>? Toca el estado.` }
+        : { id, type, city: c, prompt: `¿En qué estado está <em>${esc(c)}</em>?`, options: opts(x => x.name) };
+    }
     case 'cap': return { id, type, prompt: `¿Cuál es la capital de <em>${esc(it.name)}</em>?`, options: opts(x => x.cap) };
     case 'caprev': return { id, type, prompt: `<em>${esc(it.cap)}</em> es la capital de…`, options: opts(x => x.name) };
     case 'abbr': return { id, type, prompt: `¿Qué estado es <em>${it.abbr}</em>?`, options: opts(x => x.name) };
     case 'abbrrev': return { id, type: 'abbr', prompt: `¿Cuál es la abreviatura de <em>${esc(it.name)}</em>?`, options: opts(x => x.abbr) };
   }
 }
-function explain(id) {
+function explain(id, city) {
   const it = ITEMS[id];
-  return `<b>${esc(fullName(it))}</b> · capital ${esc(it.cap)}${it.abbr ? ` · ${it.abbr}` : ''}`;
+  if (city) return `<b>${esc(city)}</b> está en <b>${esc(it.name)}</b> (${it.abbr})`;
+  if (it.abbr) return `<b>${esc(fullName(it))}</b> · ${it.abbr} · ${esc(CITIES[it.abbr].join(', '))}`;
+  return `<b>${esc(fullName(it))}</b> · capital ${esc(it.cap)}`;
 }
 
 /* ---------- una pregunta cada vez ---------- */
@@ -498,7 +520,7 @@ function pickAnswer(id) {
   const right = id === cur.id;
   qMap.clear(); qMap.setPick(false);
   if (right) qMap.mark(id, 'ok'); else { qMap.mark(id, 'ko'); qMap.mark(cur.id, 'ok'); if (!qMap.inView(cur.id)) qMap.focus(cur.id); }
-  finish(right, right ? `Bien. ${explain(cur.id)}` : `Eso es ${esc(fullName(ITEMS[id]))}. El que buscabas está en verde: ${explain(cur.id)}`);
+  finish(right, right ? `Bien. ${explain(cur.id, cur.city)}` : `Eso es ${esc(fullName(ITEMS[id]))}. El que buscabas está en verde: ${explain(cur.id, cur.city)}`);
 }
 $('#qOpts').addEventListener('click', e => {
   const b = e.target.closest('.opt'); if (!b || answered()) return;
@@ -506,7 +528,7 @@ $('#qOpts').addEventListener('click', e => {
   $('#qOpts').querySelectorAll('.opt').forEach(o => { o.disabled = true; if (o.dataset.id === cur.id) o.classList.add('ok'); });
   if (!right) b.classList.add('ko');
   if (qMap && cur.type === 'name') { qMap.clear(); qMap.mark(cur.id, right ? 'ok' : 'ko'); }
-  finish(right, (right ? 'Bien. ' : 'No. ') + explain(cur.id));
+  finish(right, (right ? 'Bien. ' : 'No. ') + explain(cur.id, cur.city));
 });
 function finish(right, html) {
   record(cur.id, right);
