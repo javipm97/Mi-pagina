@@ -90,8 +90,16 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .label { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; }
 
 /* mapa */
-.mapwrap { position: relative; background: var(--sea); border-radius: 18px; overflow: hidden; border: 1px solid var(--line); display: flex; justify-content: center; }
-.mapwrap svg { display: block; width: 100%; height: auto; max-height: 62vh; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.mapwrap { position: relative; background: var(--sea); border-radius: 16px; overflow: hidden; border: 1px solid var(--line); display: flex; justify-content: center; }
+.mapwrap svg { display: block; width: 100%; height: auto; max-height: 64vh; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+.mapwrap .seabg { fill: var(--sea); }
+#qMap { margin: 0 -12px; }
+#qMap:empty { display: none; }
+.zoomrow { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+.zoomrow .hint { margin-right: auto; padding-left: 4px; }
+.zoomrow button { min-width: 40px; height: 40px; padding: 0 12px; border-radius: 20px; border: 0; background: var(--chip); color: var(--ink); font: 600 15px var(--body); cursor: pointer; }
+.zoomrow button:not(.all) { font-size: 20px; padding: 0; }
+@media (max-width: 480px) { .app { padding-left: 12px; padding-right: 12px; } .card { padding: 18px 16px; } #qMap { margin: 0 -8px; } .zoomrow .hint { display: none; } }
 .mapwrap.zoomed svg { touch-action: none; cursor: grab; }
 .mapwrap .ctx { fill: var(--ctx); stroke: var(--border); stroke-width: .6; vector-effect: non-scaling-stroke; }
 .mapwrap .rg { fill: var(--land); stroke: var(--border); stroke-width: .9; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill .15s; }
@@ -286,107 +294,138 @@ function fullName(it) { return it.alt ? `${it.name} (${it.alt})` : it.name; }
 /* ---------- mapa ---------- */
 function createMap(host, key, opts = {}) {
   const m = DATA.maps[key];
+  const A = opts.aspect || m.h / m.w; // alto/ancho de la ventana del mapa
   host.innerHTML = '';
   const wrap = document.createElement('div'); wrap.className = 'mapwrap' + (opts.labels ? '' : ' nolabels') + (opts.pick ? ' pick' : '');
   const svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('viewBox', `0 0 ${m.w} ${m.h}`);
   svg.setAttribute('aria-label', 'Mapa');
-  svg.style.aspectRatio = m.w + ' / ' + m.h;
-  let html = '';
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+  svg.style.aspectRatio = String(1 / A);
+  let html = `<rect x="-5000" y="-5000" width="${m.w + 10000}" height="${m.h + 10000}" class="seabg"/>`;
   for (const d of m.ctx) html += `<path class="ctx" d="${d}"/>`;
   for (const r of m.regions) html += `<path class="rg" data-id="${r.id}" d="${r.d}"/>`;
-  const dotR = m.w / 110;
+  const dotR = m.w / 140;
   for (const r of m.regions) if (r.a < m.w * m.h / 2600) html += `<circle class="rg dot" data-id="${r.id}" cx="${r.c[0]}" cy="${r.c[1]}" r="${dotR}"/>`;
   html += '<g class="labels">';
   for (const r of m.regions) { const it = ITEMS[r.id]; html += `<text data-for="${r.id}" x="${r.c[0]}" y="${r.c[1]}">${esc(it.abbr || it.name)}</text>`; }
   html += '</g>';
   svg.innerHTML = html;
   wrap.appendChild(svg);
-  const zb = document.createElement('div'); zb.className = 'zoombar';
-  zb.innerHTML = '<button type="button" aria-label="Acercar">+</button><button type="button" aria-label="Alejar">−</button><button type="button" class="reset" aria-label="Ver mapa completo">Todo</button>';
-  wrap.appendChild(zb);
   host.appendChild(wrap);
+  const zr = document.createElement('div'); zr.className = 'zoomrow';
+  zr.innerHTML = '<span class="hint">Pellizca o arrastra para moverte</span><button type="button" aria-label="Alejar">−</button><button type="button" aria-label="Acercar">+</button><button type="button" class="all">Ver todo</button>';
+  host.appendChild(zr);
 
   const regionById = Object.fromEntries(m.regions.map(r => [r.id, r]));
   const labels = [...svg.querySelectorAll('.labels text')];
-  let vb = { x: 0, y: 0, w: m.w, h: m.h };
-  function apply() {
-    const minW = m.w / 14;
-    vb.w = Math.max(minW, Math.min(m.w, vb.w)); vb.h = vb.w * m.h / m.w;
-    vb.x = Math.max(0, Math.min(m.w - vb.w, vb.x)); vb.y = Math.max(0, Math.min(m.h - vb.h, vb.y));
-    svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
-    wrap.classList.toggle('zoomed', vb.w < m.w - 1);
-    const pxW = svg.getBoundingClientRect().width || 600;
-    const u = vb.w / pxW; // unidades de mapa por píxel
-    const fs = 11.5 * u;
+  // vista completa: todo el mapa cabe en la ventana
+  const full = () => A >= m.h / m.w ? { w: m.w, h: m.w * A, x: 0, y: (m.h - m.w * A) / 2 } : { w: m.h / A, h: m.h, x: (m.w - m.h / A) / 2, y: 0 };
+  const F = full(), minW = F.w / 12;
+  let vb = { ...F }, raf = 0, anim = 0;
+  function clamp(v) {
+    v.w = Math.max(minW, Math.min(F.w, v.w)); v.h = v.w * A;
+    v.x = v.w >= m.w ? (m.w - v.w) / 2 : Math.max(0, Math.min(m.w - v.w, v.x));
+    v.y = v.h >= m.h ? (m.h - v.h) / 2 : Math.max(0, Math.min(m.h - v.h, v.y));
+    return v;
+  }
+  function draw() {
+    raf = 0;
+    svg.setAttribute('viewBox', `${vb.x.toFixed(1)} ${vb.y.toFixed(1)} ${vb.w.toFixed(1)} ${vb.h.toFixed(1)}`);
+    wrap.classList.toggle('zoomed', vb.w < F.w - 1);
+    if (wrap.classList.contains('nolabels')) return;
+    const u = vb.w / (svg.getBoundingClientRect().width || 600);
     for (const t of labels) {
-      t.style.fontSize = fs + 'px';
-      const r = regionById[t.dataset.for];
-      const need = t.textContent.length * 6.6 + 4;
-      t.style.display = (r.lw / u) >= need ? '' : 'none';
+      t.style.fontSize = (11.5 * u) + 'px';
+      t.style.display = (regionById[t.dataset.for].lw / u) >= t.textContent.length * 6.6 + 4 ? '' : 'none';
     }
   }
+  function apply() { clamp(vb); if (!raf) raf = requestAnimationFrame(draw); }
+  function animateTo(t) {
+    cancelAnimationFrame(anim); t = clamp({ ...t });
+    const s0 = { ...vb }, t0 = performance.now(), dur = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 320;
+    const step = now => {
+      const k = dur ? Math.min(1, (now - t0) / dur) : 1, e = 1 - Math.pow(1 - k, 3);
+      vb = { x: s0.x + (t.x - s0.x) * e, y: s0.y + (t.y - s0.y) * e, w: s0.w + (t.w - s0.w) * e, h: 0 };
+      vb.h = vb.w * A; draw();
+      if (k < 1) anim = requestAnimationFrame(step);
+    };
+    anim = requestAnimationFrame(step);
+  }
   function toSvg(cx, cy) { const p = svg.createSVGPoint(); p.x = cx; p.y = cy; const q = p.matrixTransform(svg.getScreenCTM().inverse()); return [q.x, q.y]; }
-  function zoomAt(f, px, py) { const nw = Math.max(m.w / 14, Math.min(m.w, vb.w / f)); const k = nw / vb.w; vb.x = px - (px - vb.x) * k; vb.y = py - (py - vb.y) * k; vb.w = nw; apply(); }
-  function reset() { vb = { x: 0, y: 0, w: m.w, h: m.h }; apply(); }
-  function focus(id, force) {
+  function zoomAt(f, px, py, smooth) {
+    const nw = Math.max(minW, Math.min(F.w, vb.w / f)), k = nw / vb.w;
+    const t = { x: px - (px - vb.x) * k, y: py - (py - vb.y) * k, w: nw };
+    if (smooth) animateTo(t); else { cancelAnimationFrame(anim); vb = { ...t, h: nw * A }; apply(); }
+  }
+  function reset() { animateTo(F); }
+  // ventana alrededor de un territorio; con "jitter" no queda siempre en el centro
+  function focus(id, o = {}) {
     const r = regionById[id]; if (!r) return;
     const [x, y, w, h] = r.b;
-    const size = Math.max(w, h * m.w / m.h);
-    if (!force && size > m.w / 7) { reset(); return; }
-    vb.w = Math.min(m.w, Math.max(size * 4, m.w / 5)); vb.h = vb.w * m.h / m.w;
-    vb.x = x + w / 2 - vb.w / 2; vb.y = y + h / 2 - vb.h / 2; apply();
+    const size = Math.max(w, h / A);
+    const W = Math.max(o.min || F.w * 0.3, Math.min(F.w, size * (o.k || 3)));
+    let cx = x + w / 2, cy = y + h / 2;
+    if (o.jitter) {
+      const fx = Math.max(0, (W - w) / 2 * 0.55), fy = Math.max(0, (W * A - h) / 2 * 0.55);
+      cx += (Math.random() * 2 - 1) * fx; cy += (Math.random() * 2 - 1) * fy;
+    }
+    const t = { x: cx - W / 2, y: cy - W * A / 2, w: W };
+    if (o.instant) { cancelAnimationFrame(anim); vb = { ...t, h: W * A }; apply(); } else animateTo(t);
   }
-  const [bIn, bOut, bReset] = zb.querySelectorAll('button');
-  bIn.onclick = () => zoomAt(1.8, vb.x + vb.w / 2, vb.y + vb.h / 2);
-  bOut.onclick = () => zoomAt(1 / 1.8, vb.x + vb.w / 2, vb.y + vb.h / 2);
-  bReset.onclick = reset;
+  function inView(id) { const r = regionById[id]; if (!r) return false; const [x, y] = r.c; return x > vb.x && x < vb.x + vb.w && y > vb.y && y < vb.y + vb.h; }
+  const [bOut, bIn, bAll] = zr.querySelectorAll('button');
+  bIn.onclick = () => zoomAt(1.7, vb.x + vb.w / 2, vb.y + vb.h / 2, true);
+  bOut.onclick = () => zoomAt(1 / 1.7, vb.x + vb.w / 2, vb.y + vb.h / 2, true);
+  bAll.onclick = reset;
 
   // gestos: arrastrar, pellizcar, tocar
   const pts = new Map(); let moved = 0, pinched = false, lastD = 0;
   svg.addEventListener('pointerdown', e => {
+    cancelAnimationFrame(anim);
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pts.size === 1) { moved = 0; pinched = false; }
-    if (pts.size === 2) { pinched = true; const [a, b] = [...pts.values()]; lastD = Math.hypot(a.x - b.x, a.y - b.y); }
-    if (wrap.classList.contains('zoomed') || pts.size === 2) { try { svg.setPointerCapture(e.pointerId); } catch (_) {} }
+    if (pts.size === 2) { pinched = true; const [p1, p2] = [...pts.values()]; lastD = Math.hypot(p1.x - p2.x, p1.y - p2.y); }
+    try { svg.setPointerCapture(e.pointerId); } catch (_) {}
   });
   svg.addEventListener('pointermove', e => {
     const p = pts.get(e.pointerId); if (!p) return;
     const dx = e.clientX - p.x, dy = e.clientY - p.y;
     p.x = e.clientX; p.y = e.clientY;
     if (pts.size === 2) {
-      const [a, b] = [...pts.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y);
-      if (lastD > 0) { const [mx, my] = toSvg((a.x + b.x) / 2, (a.y + b.y) / 2); zoomAt(d / lastD, mx, my); }
+      const [p1, p2] = [...pts.values()]; const d = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+      if (lastD > 0 && d > 0) { const [mx, my] = toSvg((p1.x + p2.x) / 2, (p1.y + p2.y) / 2); zoomAt(d / lastD, mx, my); }
       lastD = d; moved += 20; return;
     }
     moved += Math.abs(dx) + Math.abs(dy);
-    if (wrap.classList.contains('zoomed') && moved > 6) {
-      const u = vb.w / svg.getBoundingClientRect().width; vb.x -= dx * u; vb.y -= dy * u; apply();
-    }
+    if (moved > 6) { const u = vb.w / svg.getBoundingClientRect().width; vb.x -= dx * u; vb.y -= dy * u; apply(); }
   });
   const end = e => {
     const had = pts.has(e.pointerId); pts.delete(e.pointerId);
     if (!had || e.type === 'pointercancel') return;
-    if (pts.size === 0 && !pinched && moved < 8 && opts.onPick) {
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      const t = el && el.closest && el.closest('[data-id]');
-      if (t && svg.contains(t)) opts.onPick(t.dataset.id);
+    if (pts.size === 0 && !pinched && moved < 10 && opts.onPick) {
+      // toque: el territorio bajo el dedo o, si no hay, el más cercano a menos de ~14 px
+      let el = document.elementFromPoint(e.clientX, e.clientY);
+      let t = el && el.closest && el.closest('[data-id]');
+      if (!t || !svg.contains(t)) {
+        const [sx, sy] = toSvg(e.clientX, e.clientY), u = vb.w / svg.getBoundingClientRect().width;
+        let best = null, bd = 14 * u;
+        for (const r of m.regions) { const d = Math.hypot(r.c[0] - sx, r.c[1] - sy); if (d < bd) { bd = d; best = r.id; } }
+        if (best) opts.onPick(best);
+      } else opts.onPick(t.dataset.id);
     }
   };
   svg.addEventListener('pointerup', end);
   svg.addEventListener('pointercancel', end);
-  svg.addEventListener('wheel', e => {
-    if (!e.ctrlKey && !wrap.classList.contains('zoomed')) return;
-    e.preventDefault(); const [mx, my] = toSvg(e.clientX, e.clientY); zoomAt(Math.exp(-e.deltaY * 0.004), mx, my);
-  }, { passive: false });
+  svg.addEventListener('wheel', e => { e.preventDefault(); const [mx, my] = toSvg(e.clientX, e.clientY); zoomAt(Math.exp(-e.deltaY * 0.004), mx, my); }, { passive: false });
+  svg.addEventListener('dblclick', e => { const [mx, my] = toSvg(e.clientX, e.clientY); zoomAt(2, mx, my, true); });
 
   function mark(id, cls) { svg.querySelectorAll(`[data-id="${id}"]`).forEach(el => el.classList.add(cls)); }
   function clear() { svg.querySelectorAll('.rg').forEach(el => el.classList.remove('sel', 'ask', 'ok', 'ko')); }
-  function setLabels(on) { wrap.classList.toggle('nolabels', !on); }
+  function setLabels(on) { wrap.classList.toggle('nolabels', !on); apply(); }
   function setPick(on) { wrap.classList.toggle('pick', on); }
-  requestAnimationFrame(apply);
+  apply();
   window.addEventListener('resize', apply);
-  return { mark, clear, focus, reset, setLabels, setPick, wrap };
+  return { mark, clear, focus, reset, setLabels, setPick, inView, wrap };
 }
 
 /* ---------- preguntas ---------- */
@@ -447,8 +486,9 @@ function nextQuestion() {
   $('#qFb').hidden = true; $('#qNextRow').hidden = true;
   const host = $('#qMap');
   if (cur.mapKey) {
-    qMap = createMap(host, cur.mapKey, { labels: false, pick: cur.type === 'find', onPick: cur.type === 'find' ? pickAnswer : null });
-    if (cur.type === 'name') { qMap.mark(cur.id, 'ask'); requestAnimationFrame(() => qMap.focus(cur.id)); }
+    qMap = createMap(host, cur.mapKey, { labels: false, aspect: cur.mapKey === 'latam' ? undefined : 0.9, pick: cur.type === 'find', onPick: cur.type === 'find' ? pickAnswer : null });
+    if (cur.type === 'name') qMap.mark(cur.id, 'ask');
+    qMap.focus(cur.id, { instant: true, jitter: cur.type === 'find', k: cur.type === 'find' ? 3.2 : 3 });
   } else { host.innerHTML = ''; qMap = null; }
   $('#qOpts').innerHTML = (cur.options || []).map(o => `<button type="button" class="opt" data-id="${o.id}">${esc(o.text)}</button>`).join('');
 }
@@ -457,7 +497,7 @@ function pickAnswer(id) {
   if (answered()) return;
   const right = id === cur.id;
   qMap.clear(); qMap.setPick(false);
-  if (right) qMap.mark(id, 'ok'); else { qMap.mark(id, 'ko'); qMap.mark(cur.id, 'ok'); qMap.focus(cur.id); }
+  if (right) qMap.mark(id, 'ok'); else { qMap.mark(id, 'ko'); qMap.mark(cur.id, 'ok'); if (!qMap.inView(cur.id)) qMap.focus(cur.id); }
   finish(right, right ? `Bien. ${explain(cur.id)}` : `Eso es ${esc(fullName(ITEMS[id]))}. El que buscabas está en verde: ${explain(cur.id)}`);
 }
 $('#qOpts').addEventListener('click', e => {
