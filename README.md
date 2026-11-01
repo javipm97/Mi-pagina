@@ -63,3 +63,10 @@ Página de solo lectura para que las familias de Javier y Laura sigan la búsque
 - **Datos:** tablas `boda_docs`, `boda_acceso` y `boda_intentos` del mismo proyecto de Supabase. Ninguna se puede leer directamente: la página llama a la función `boda_leer(clave)`, que comprueba la clave y devuelve los datos. Tras 10 claves erróneas en 10 minutos se bloquea unos minutos.
 - **La clave no está en este repositorio.** Solo se guarda su hash en la base de datos.
 - **Actualizar los datos:** los pide Javier a Claude, que vuelve a cargar `boda_docs` desde el panel de la boda.
+
+## Mapas (`/mapas/`)
+
+Entrenamiento diario para aprenderse los estados de EE. UU., Latinoamérica y Centroamérica: estudiar en el mapa, ejercicios (ubicar, nombrar, capitales, abreviaturas) y progreso. Tiene su propia pestaña en la barra de la página principal.
+
+- **Un único `mapas/index.html`** con los mapas ya dibujados dentro (SVG generado a partir de `world-atlas` y `us-atlas`).
+- **Datos:** tabla `mapas_progreso` (una sola fila, `id = 'javi'`, con el progreso en `data`). Solo la lee y escribe la cuenta `javipm.97@gmail.com`. Usa la misma sesión que la página principal; sin sesión funciona igual pero guarda solo en el navegador.
