@@ -5,174 +5,136 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>Boda Javier y Laura</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: cabecera con presupuesto e identidad, pestañas, fichas en rejilla que pasa a una columna en móvil */
+/* Layout: barra superior, fila de cifras clave, pestañas y tablas con la primera columna fija (scroll horizontal en móvil) */
 :root{
-  --bg:#F3F4EE; --surface:#FFFFFF; --sunk:#E9ECE3; --ink:#1E231D; --muted:#5C6558; --line:#D7DCCF;
-  --olive:#4B6A37; --olive-soft:#E3EBD9; --wine:#8A2F3B; --wine-soft:#F4E1E3;
-  --ok:#2F7A45; --ok-soft:#DDEFE2; --warn:#9A6810; --warn-soft:#F6EAD0; --bad:#B0373A; --bad-soft:#F7DEDE;
-  --display:"Young Serif", Georgia, "Times New Roman", serif;
-  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --r:10px;
+  --bg:#FAFAF8; --surface:#FFFFFF; --sunk:#F2F2EE; --ink:#1C1C1A; --muted:#7A7A73; --line:#E6E6E0; --line2:#D4D4CC;
+  --accent:#3F5E46;
+  --ok:#2E7D4F; --ok-bg:#E6F3EA; --warn:#9A6A00; --warn-bg:#FBF1D9; --bad:#B23A3A; --bad-bg:#FBE6E6;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r:8px;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#131612; --surface:#1B1F1A; --sunk:#232821; --ink:#E7EAE2; --muted:#A0A99A; --line:#30362D;
-  --olive:#A4C389; --olive-soft:#2A3523; --wine:#E8899A; --wine-soft:#3A2227;
-  --ok:#86C996; --ok-soft:#1F3326; --warn:#E3B866; --warn-soft:#3A2F17; --bad:#F09595; --bad-soft:#3D2222; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#131612; --surface:#1B1F1A; --sunk:#232821; --ink:#E7EAE2; --muted:#A0A99A; --line:#30362D;
-  --olive:#A4C389; --olive-soft:#2A3523; --wine:#E8899A; --wine-soft:#3A2227;
-  --ok:#86C996; --ok-soft:#1F3326; --warn:#E3B866; --warn-soft:#3A2F17; --bad:#F09595; --bad-soft:#3D2222; color-scheme:dark}
-body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body)}
-.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
-h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0}
-h1{font-size:clamp(1.7rem,4vw,2.4rem);line-height:1.1}
-h2{font-size:1.35rem}
-h3{font-size:1.15rem;line-height:1.25}
-.eyebrow{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#141413; --surface:#1C1C1A; --sunk:#252522; --ink:#EDEDE8; --muted:#9A9A92; --line:#2E2E2B; --line2:#3D3D39;
+  --accent:#8FB896; --ok:#7FCB97; --ok-bg:#1D2E22; --warn:#E2BC5E; --warn-bg:#33291A; --bad:#EE8F8F; --bad-bg:#3A2020; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--font);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1280px;margin:0 auto;padding:16px max(14px,env(safe-area-inset-left,0px)) 48px max(14px,env(safe-area-inset-right,0px))}
+h1{font-size:18px;font-weight:650;margin:0;letter-spacing:-.01em}
 .muted{color:var(--muted)}
 .num{font-variant-numeric:tabular-nums}
 button,input,select,textarea{font:inherit;color:inherit}
-input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:6px 9px;min-width:0}
-textarea{width:100%;resize:vertical;min-height:64px;box-sizing:border-box}
-input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--olive);outline-offset:2px}
-button{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px}
-button:hover{border-color:var(--olive)}
-.btn-primary{background:var(--olive);border-color:var(--olive);color:var(--bg);font-weight:600}
-.btn-ghost{border-color:transparent;background:transparent;color:var(--muted);padding:4px 8px}
-.btn-ghost:hover{color:var(--bad);border-color:transparent}
-
-header.top{display:grid;gap:16px;grid-template-columns:1fr auto;align-items:end;padding-bottom:18px;border-bottom:1px solid var(--line)}
-.who{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.who button[aria-pressed="true"]{background:var(--wine);border-color:var(--wine);color:var(--bg);font-weight:600}
-.who-alert{background:var(--wine-soft);color:var(--wine);padding:10px 14px;border-radius:var(--r);margin-top:14px;font-weight:500}
-
-.budget{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:18px}
-.budget > div{background:var(--surface);padding:12px 14px;display:grid;gap:4px;min-width:0}
-.budget input{width:100%;max-width:150px;font-size:1.25rem;font-weight:600;padding:2px 6px;box-sizing:border-box}
-.big{font-size:1.25rem;font-weight:600}
-.small{font-size:.82rem}
-
-nav.tabs{display:flex;gap:4px;margin-top:22px;border-bottom:1px solid var(--line);overflow-x:auto}
-nav.tabs button{border:none;border-radius:0;background:none;padding:10px 14px;color:var(--muted);font-weight:600;border-bottom:2px solid transparent;white-space:nowrap}
-nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--wine)}
-nav.tabs .count{font-weight:500;color:var(--muted);margin-left:4px}
-
-.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:18px 0 14px}
-.chip{border-radius:999px;padding:4px 11px;font-size:.82rem;border:1px solid var(--line);background:var(--surface)}
-.chip[aria-pressed="true"]{background:var(--olive-soft);border-color:var(--olive);color:var(--ink);font-weight:600}
-.spacer{flex:1}
-
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
-@media (max-width:420px){.grid{grid-template-columns:1fr}}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:12px;align-content:start;min-width:0}
-.card.descartada{opacity:.6}
-.card.favorita{border-color:var(--wine);box-shadow:0 0 0 1px var(--wine) inset}
-.card-head{display:flex;gap:10px;justify-content:space-between;align-items:start}
-.card-head > div{min-width:0}
-.zona{font-size:.85rem;color:var(--muted)}
-.orig{display:inline-block;margin-top:4px;font-size:.72rem;padding:2px 8px;border-radius:999px;border:1px solid currentColor;opacity:.75}
-.estado{font-size:.82rem;padding:4px 8px;border-radius:999px;max-width:150px}
-.votes{display:grid;gap:6px}
-.vote-row{display:flex;align-items:center;gap:8px;font-size:.88rem}
-.vote-row .name{width:58px;color:var(--muted)}
-.vote-row.mine .name{color:var(--wine);font-weight:600}
-.dots{display:flex;gap:4px}
-.dot{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);background:var(--sunk);padding:0}
-.dot.on{background:var(--wine);border-color:var(--wine)}
-.dot:disabled{cursor:default}
-.vote-row:not(.mine) .dot.on{background:var(--olive);border-color:var(--olive)}
-.prices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.prices label{display:grid;gap:3px;font-size:.74rem;color:var(--muted);min-width:0}
-.prices input,.prices select{width:100%;box-sizing:border-box;font-size:.9rem;padding:5px 6px}
-.estimate{padding:9px 11px;border-radius:8px;font-size:.88rem;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.estimate.none{background:var(--sunk);color:var(--muted)}
-.estimate.ok{background:var(--ok-soft);color:var(--ok)}
-.estimate.warn{background:var(--warn-soft);color:var(--warn)}
-.estimate.bad{background:var(--bad-soft);color:var(--bad)}
-.estimate strong{font-variant-numeric:tabular-nums}
-.ficha{margin:0;display:grid;gap:0;border-top:1px solid var(--line)}
-.ficha > div{display:grid;grid-template-columns:118px 1fr;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.87rem}
-.ficha dt{color:var(--muted);font-size:.78rem;font-weight:600;letter-spacing:.02em;padding-top:1px}
-.ficha dd{margin:0;min-width:0;overflow-wrap:anywhere;white-space:pre-wrap}
-@media (max-width:420px){.ficha > div{grid-template-columns:1fr;gap:2px}}
-.row2{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:.85rem}
-.row2 a{color:var(--olive);overflow-wrap:anywhere}
-.row2 a.fotos{background:var(--olive-soft);color:var(--ink);padding:4px 10px;border-radius:999px;text-decoration:none;font-weight:600}
-details summary{cursor:pointer;color:var(--olive);font-weight:600;font-size:.88rem}
-details[open] summary{margin-bottom:8px}
-.notes{display:grid;gap:8px}
-.note{background:var(--sunk);border-radius:8px;padding:8px 10px;font-size:.88rem;min-width:0}
-.note .meta{font-size:.74rem;color:var(--muted);display:flex;justify-content:space-between;gap:6px}
-.note p{margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
-.note.javier .who-tag{color:var(--wine)} .note.laura .who-tag{color:var(--olive)}
-.add-note{display:flex;gap:6px}
-.add-note input{flex:1}
-
-.dec{display:grid;gap:12px}
-.dec .opins{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media (max-width:560px){.dec .opins{grid-template-columns:1fr}}
-.dec label{display:grid;gap:4px;font-size:.78rem;color:var(--muted);min-width:0}
-.pill{font-size:.75rem;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
-.pill.open{background:var(--warn-soft);color:var(--warn)}
-.pill.done{background:var(--ok-soft);color:var(--ok)}
-
-.tasks{display:grid;gap:8px}
-.task{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
-.task input[type=checkbox]{width:18px;height:18px;accent-color:var(--olive)}
-.task .t{min-width:0;overflow-wrap:anywhere}
-.task.done .t{text-decoration:line-through;color:var(--muted)}
-.task select,.task input[type=date]{font-size:.82rem;padding:4px 6px}
-@media (max-width:560px){.task{grid-template-columns:auto 1fr auto}.task select,.task input[type=date]{grid-column:2}}
-.addbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);padding:12px}
-.addbar input,.addbar select{flex:1 1 140px}
-.empty{padding:28px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:var(--r)}
-.status{font-size:.8rem;color:var(--muted);margin-top:10px;min-height:1.2em}
-.status.err{color:var(--bad)}
-.foot{margin-top:28px;font-size:.8rem;color:var(--muted);max-width:70ch}
-@media (max-width:640px){
-  header.top{grid-template-columns:1fr}
-  .budget{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .prices{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media (prefers-reduced-motion:no-preference){.card{transition:border-color .2s}}
+input,select,textarea{background:var(--surface);border:1px solid var(--line2);border-radius:6px;padding:5px 8px;min-width:0}
+textarea{width:100%;resize:vertical;min-height:54px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button{cursor:pointer;border:1px solid var(--line2);background:var(--surface);border-radius:6px;padding:5px 12px}
+.btn-primary{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:600}
+.btn-link{border:none;background:none;color:var(--muted);padding:4px 0;text-decoration:underline;font-size:12px}
 [hidden]{display:none!important}
-.login{max-width:420px;margin:12vh auto 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:grid;gap:14px}
-.login input{width:100%;box-sizing:border-box;font-size:1rem;padding:10px 12px}
-.login .btn-primary{padding:10px 16px}
-.pill.est{background:var(--sunk);color:var(--muted)}
-.pill.est.fav{background:var(--wine-soft);color:var(--wine)}
-.vote-row .dot{cursor:default}
-.visita{font-size:.85rem;color:var(--muted)}
-.edit-badge{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--wine-soft);color:var(--wine);margin-left:8px;vertical-align:middle}
-.editbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;padding:10px 14px;background:var(--wine-soft);border-radius:var(--r);color:var(--wine);font-weight:500}
-.editbar button[aria-pressed="true"]{background:var(--wine);border-color:var(--wine);color:var(--bg);font-weight:600}
-.dot.edit{cursor:pointer}
-.ed{display:grid;gap:3px;font-size:.76rem;color:var(--muted)}
-.ed input,.ed select,.ed textarea{width:100%;box-sizing:border-box;font-size:.88rem}
-.ed textarea{min-height:56px}
-.saved{color:var(--ok)}
-.dec .opin{background:var(--sunk);border-radius:8px;padding:8px 10px;font-size:.88rem;white-space:pre-wrap;overflow-wrap:anywhere}
-.dec .opin b{display:block;font-size:.74rem;color:var(--muted);font-weight:600;margin-bottom:2px}
-.task .quien{font-size:.82rem;color:var(--muted)}
 
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.stamp{font-size:12px;color:var(--muted)}
+
+/* cifras clave */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border:1px solid var(--line);border-radius:var(--r);background:var(--surface);margin-top:12px;overflow:hidden}
+.kpi{padding:10px 12px;border-right:1px solid var(--line);min-width:0}
+.kpi:last-child{border-right:none}
+.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.kpi .v{font-size:19px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:720px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.kpi:nth-child(3){border-right:none}.kpi:nth-child(-n+3){border-bottom:1px solid var(--line)}}
+
+/* pestañas y controles */
+nav.tabs{display:flex;gap:2px;margin-top:16px;border-bottom:1px solid var(--line)}
+nav.tabs button{border:none;border-radius:0;background:none;padding:9px 12px;color:var(--muted);font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+nav.tabs .c{font-weight:500;margin-left:4px;font-size:12px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg button{border:none;border-radius:0;padding:5px 10px;border-right:1px solid var(--line2);font-variant-numeric:tabular-nums}
+.seg button:last-child{border-right:none}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:600}
+.lbl{font-size:12px;color:var(--muted);margin-right:-2px}
+.spacer{flex:1}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin:-4px 0 10px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+
+/* tabla */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:separate;border-spacing:0;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right;vertical-align:middle}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;background:var(--sunk);position:sticky;top:0}
+th.grp{text-align:center;border-left:1px solid var(--line)}
+td.l,th.l{text-align:left}
+td.c,th.c{text-align:center}
+.bl{border-left:1px solid var(--line)}
+tr:last-child>td{border-bottom:none}
+.fx{position:sticky;left:0;z-index:1;background:var(--surface);text-align:left;max-width:190px;overflow:hidden;text-overflow:ellipsis;border-right:1px solid var(--line)}
+th.fx{background:var(--sunk);z-index:2}
+tbody tr.row{cursor:pointer}
+tbody tr.row:hover td{background:var(--sunk)}
+tbody tr.row.open td{background:var(--sunk)}
+tr.desc td{opacity:.45}
+.fn{font-weight:600}
+.est{display:block;font-size:11px;color:var(--muted);font-weight:500}
+.t-ok{background:var(--ok-bg)!important;color:var(--ok);font-weight:600}
+.t-warn{background:var(--warn-bg)!important;color:var(--warn);font-weight:600}
+.t-bad{background:var(--bad-bg)!important;color:var(--bad);font-weight:600}
+.aprox{font-style:italic;opacity:.8}
+.nd{color:var(--muted);opacity:.6}
+.ref{color:var(--muted);text-align:center;font-size:12.5px}
+.y{color:var(--ok);font-weight:700}
+.n{color:var(--bad);font-weight:700}
+.q{color:var(--muted)}
+.st{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--sunk);color:var(--muted);font-weight:600}
+.st.fav{background:var(--ink);color:var(--bg)}
+.st.resp{background:var(--ok-bg);color:var(--ok)}
+.st.vis{background:var(--warn-bg);color:var(--warn)}
+
+/* detalle de finca */
+tr.det>td{background:var(--bg);white-space:normal;text-align:left;padding:12px}
+.cells{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.cell{background:var(--surface);padding:7px 10px;min-width:0}
+.cell .l{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.cell .v{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.det-grid{display:grid;gap:12px;max-width:1000px}
+.mx{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface);display:inline-block;max-width:100%;overflow-x:auto}
+.mx table th,.mx table td{padding:6px 12px}
+.links{display:flex;gap:12px;flex-wrap:wrap;font-size:13px}
+.links a{color:var(--accent);font-weight:600}
+.edrow{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.edrow label{display:grid;gap:3px;font-size:11px;color:var(--muted);font-weight:600}
+details.notes summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:600}
+details.notes dl{margin:8px 0 0;display:grid;gap:8px;font-size:13px;max-width:900px}
+details.notes dt{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase}
+details.notes dd{margin:0;white-space:pre-wrap}
+
+/* decisiones y tareas */
+td.wrap,th.wrap{white-space:normal;text-align:left;min-width:160px}
+.sub{font-size:12px;color:var(--muted);margin-top:2px}
+td input[type=text],td textarea,td select{width:100%}
+td input[type=checkbox]{width:17px;height:17px;accent-color:var(--ink)}
+tr.done td{color:var(--muted)}
+tr.done .tt{text-decoration:line-through}
+.late{color:var(--bad);font-weight:600}
+.addbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.addbar input,.addbar select{flex:1 1 140px}
+
+.login{max-width:380px;margin:12vh auto 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px;display:grid;gap:12px}
+.login input{width:100%;font-size:16px;padding:9px 11px}
+.status{font-size:12px;color:var(--muted);min-height:1.2em;margin-top:8px}
+.status.err{color:var(--bad)} .status.okk{color:var(--ok)}
+.editbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;font-size:13px}
+.editbar .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:var(--ink);color:var(--bg);padding:3px 8px;border-radius:4px}
+@media (max-width:600px){th,td{padding:7px 7px}.fx{max-width:122px;font-size:13px}.kpi .v{font-size:17px}}
+.foot{margin-top:18px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="top">
-    <div>
-      <div class="eyebrow">Boda 2028 · Madrid · iglesia y finca</div>
-      <h1>Javier y Laura</h1>
-    </div>
-    <div class="small muted" id="stamp"></div>
-  </header>
+  <div class="top"><h1>Boda Javier y Laura · 2028</h1><span class="stamp" id="stamp"></span></div>
 
   <section id="login" class="login" hidden>
-    <h2>Entrar</h2>
-    <p class="muted" style="margin:0">Escribe la clave que os han pasado Javier y Laura para ver cómo va la búsqueda de finca.</p>
+    <strong>Entrar</strong>
     <form id="loginForm" style="display:grid;gap:10px">
       <input id="pw" type="password" autocomplete="current-password" placeholder="Clave" aria-label="Clave" required>
       <button class="btn-primary" type="submit">Entrar</button>
@@ -181,19 +143,18 @@ details[open] summary{margin-bottom:8px}
   </section>
 
   <div id="app" hidden>
+    <div class="kpis" id="kpis"></div>
     <div class="editbar" id="editbar" hidden>
-      <span>Modo edición. Estás votando como:</span>
-      <button type="button" data-yo="javier" aria-pressed="false">Javier</button>
-      <button type="button" data-yo="laura" aria-pressed="false">Laura</button>
+      <span class="tag">Edición</span><span class="muted">Votas como</span>
+      <span class="seg"><button type="button" data-yo="javier" aria-pressed="false">Javier</button><button type="button" data-yo="laura" aria-pressed="false">Laura</button></span>
     </div>
     <nav class="tabs" role="tablist">
-      <button role="tab" data-tab="fincas" aria-selected="true">Fincas<span class="count" id="c-fincas"></span></button>
-      <button role="tab" data-tab="decisiones" aria-selected="false">Decisiones<span class="count" id="c-decisiones"></span></button>
-      <button role="tab" data-tab="tareas" aria-selected="false">Tareas<span class="count" id="c-tareas"></span></button>
+      <button role="tab" data-tab="fincas" aria-selected="true">Fincas<span class="c" id="c-fincas"></span></button>
+      <button role="tab" data-tab="decisiones" aria-selected="false">Decisiones<span class="c" id="c-decisiones"></span></button>
+      <button role="tab" data-tab="tareas" aria-selected="false">Tareas<span class="c" id="c-tareas"></span></button>
     </nav>
     <main id="view"></main>
-    <p class="foot" id="footTxt">Esta página es solo para consultar: los cambios los hacen Javier y Laura. Los tiempos desde la parroquia de Santa Bárbara son aproximados, en coche y sin tráfico de sábado por la tarde. Los precios por invitado son orientativos hasta que cada finca envíe su dosier.</p>
-    <p><button type="button" class="btn-ghost small" id="logout">Salir</button></p>
+    <div class="foot"><span id="footTxt">Solo consulta. Los cambios los hacen Javier y Laura.</span><button type="button" class="btn-link" id="logout">Salir</button></div>
   </div>
 </div>
 
@@ -202,35 +163,25 @@ details[open] summary{margin-bottom:8px}
   "use strict";
   const SUPABASE_URL="https://mwsapcjzubisdszmwswp.supabase.co";
   const SUPABASE_KEY="sb_publishable_oe1TNOb-Y-Lu3jYI8wr5XA_nLDluFOf";
-  const FICHA=[["precioTxt","Precio"],["tiempo","Desde Santa Bárbara"],["incluye","Qué incluye"],["minimo","Invitados"],["opiniones","Opiniones"],["importante","Para vosotros"]];
-  const S={fincas:[],decisiones:[],tareas:[],updated:null,rol:"lector",pw:""};
-  const YO={w:(function(){try{return localStorage.getItem("boda-yo")||"";}catch(e){return "";}})()};
-  const UI={tab:"fincas",filter:"Todas",hideDiscarded:true,sort:"votos"};
+  const MESES=[["mar","Mar"],["may","May"],["jun","Jun"],["sep","Sep"],["oct","Oct"]];
+  const INV=[120,130,140];
   const ESTADOS=["Por contactar","Correo listo","Correo enviado","Han respondido","Visita prevista","Visitada","Favorita","Descartada"];
+  const S={fincas:[],decisiones:[],tareas:[],config:{},updated:null,rol:"lector",pw:""};
+  const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}};
+  const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+  const YO={w:ls("boda-yo","")};
+  const UI={tab:ls("boda-tab","fincas"),vista:ls("boda-vista","mes"),inv:Number(ls("boda-inv","130")),mes:ls("boda-mes","mar"),orden:ls("boda-orden","precio"),ocultar:ls("boda-ocultar","1")==="1",abierta:""};
+  if(!INV.includes(UI.inv)) UI.inv=130;
 
   const $=s=>document.querySelector(s);
   const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const safeUrl=u=>/^https?:\/\//i.test(u||"")?u:"";
-  const nm=w=>w==="javier"?"Javier":w==="laura"?"Laura":"—";
-  const score=f=>{ const v=f.votos||{}; return (Number(v.javier)||0)+(Number(v.laura)||0); };
-  const getPw=()=>{ try{return localStorage.getItem("boda-clave")||"";}catch(e){return "";} };
+  const eur=v=>v==null?"":Math.round(v).toLocaleString("es-ES")+" €";
+  const k=v=>v==null?"":(Math.round(v/100)/10).toLocaleString("es-ES",{minimumFractionDigits:1,maximumFractionDigits:1})+" k";
+  const getPw=()=>ls("boda-clave","");
   const setPw=v=>{ try{ v?localStorage.setItem("boda-clave",v):localStorage.removeItem("boda-clave"); }catch(e){} };
-  try{ const t=localStorage.getItem("boda-tab"); if(t) UI.tab=t; }catch(e){}
 
-  async function cargar(pw){
-    let r;
-    try{
-      r=await fetch(SUPABASE_URL+"/rest/v1/rpc/boda_leer",{method:"POST",headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify({p_password:pw})});
-    }catch(e){ throw new Error("red"); }
-    const j=await r.json().catch(()=>null);
-    if(!r.ok){
-      const m=(j&&j.message)||"";
-      if(m.includes("clave_incorrecta")) throw new Error("clave");
-      if(m.includes("demasiados_intentos")) throw new Error("intentos");
-      throw new Error("servidor");
-    }
-    return j;
-  }
+  // ---------- datos ----------
   async function rpc(fn,body){
     let r;
     try{ r=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify(body)}); }
@@ -240,122 +191,199 @@ details[open] summary{margin-bottom:8px}
     return j;
   }
   const editor=()=>S.rol==="editor";
-  function setStatus(msg,err){ const el=$("#saveStatus"); if(el){ el.textContent=msg; el.className="status"+(err?" err":" saved"); } }
+  function setStatus(msg,err){ const el=$("#saveStatus"); if(el){ el.textContent=msg; el.className="status "+(err?"err":"okk"); } }
   async function guardar(col,id,patch){
-    const lista=S[col]; const o=lista.find(x=>x.id===id);
-    if(!o) return;
+    const o=S[col].find(x=>x.id===id); if(!o) return;
     Object.assign(o,patch);
     try{ await rpc("boda_guardar",{p_password:S.pw,p_coleccion:col,p_id:id,p_data:patch}); setStatus("Guardado"); }
     catch(e){ setStatus(e.message==="intentos"?"Demasiados intentos, espera 10 minutos.":"No se ha podido guardar. Recarga e inténtalo otra vez.",true); }
   }
   function aplicar(rows){
-    S.fincas=[];S.decisiones=[];S.tareas=[];S.updated=null;
+    S.fincas=[];S.decisiones=[];S.tareas=[];S.config={};S.updated=null;
     for(const r of rows){
       const o={id:r.id,...r.d};
       if(r.c==="fincas")S.fincas.push(o); else if(r.c==="decisiones")S.decisiones.push(o); else if(r.c==="tareas")S.tareas.push(o);
+      else if(r.c==="config"&&r.id==="general")S.config=o;
       if(r.u&&(!S.updated||r.u>S.updated))S.updated=r.u;
     }
   }
   function mostrarLogin(msg){ $("#app").hidden=true; $("#login").hidden=false; $("#loginErr").textContent=msg||""; $("#stamp").textContent=""; }
   function mostrarApp(){
     $("#login").hidden=true; $("#app").hidden=false;
-    if(S.updated){ const d=new Date(S.updated); $("#stamp").textContent="Actualizado el "+d.toLocaleDateString("es-ES",{day:"numeric",month:"long"}); }
+    if(S.updated){ $("#stamp").textContent="Actualizado "+new Date(S.updated).toLocaleDateString("es-ES",{day:"numeric",month:"short"}); }
     render();
   }
   async function entrar(pw,esAuto){
-    try{ const rows=await cargar(pw); S.rol=await rpc("boda_rol",{p_password:pw}); S.pw=pw; aplicar(rows); setPw(pw); mostrarApp(); }
+    try{ const rows=await rpc("boda_leer",{p_password:pw}); S.rol=await rpc("boda_rol",{p_password:pw}); S.pw=pw; aplicar(rows); setPw(pw); mostrarApp(); }
     catch(e){
       if(e.message==="clave"){ setPw(""); mostrarLogin(esAuto?"":"La clave no es correcta."); }
-      else if(e.message==="intentos") mostrarLogin("Demasiados intentos. Espera 10 minutos y vuelve a probar.");
-      else if(e.message==="red") mostrarLogin("No hay conexión. Revisa internet y recarga.");
-      else mostrarLogin("Ahora mismo no se pueden cargar los datos. Prueba en un rato.");
+      else if(e.message==="intentos") mostrarLogin("Demasiados intentos. Espera 10 minutos.");
+      else if(e.message==="red") mostrarLogin("Sin conexión. Revisa internet y recarga.");
+      else mostrarLogin("No se pueden cargar los datos ahora. Prueba en un rato.");
     }
   }
   $("#loginForm").addEventListener("submit",e=>{ e.preventDefault(); const v=$("#pw").value.trim(); if(v) entrar(v,false); });
   $("#logout").addEventListener("click",()=>{ setPw(""); $("#pw").value=""; mostrarLogin(""); });
 
-  // ---------- render ----------
-  function renderHeader(){
+  // ---------- cálculo ----------
+  // total sábado con IVA: menú (10 %) por invitado, plazas hasta el mínimo, fijo (alquiler, DJ...) al 21 % salvo ivaF
+  function total(f,mes,n){
+    const d=f.n&&f.n.m&&f.n.m[mes]; if(!d) return null;
+    if(d.tot!=null) return n<=(d.min||0)?{v:d.tot,c:d.c}:null;
+    const mn=d.min||0, eff=Math.max(n,mn), falta=eff-n;
+    const pp=n*d.pp+falta*(d.fa!=null?d.fa:d.pp);
+    const fx=(d.f||0)+(d.fc&&n<d.fc[0]?d.fc[1]:0);
+    const ivaF=1+((f.n.ivaF!=null?f.n.ivaF:21)/100);
+    return {v:pp*1.10+fx*ivaF,c:d.c};
+  }
+  const minMes=(f,mes)=>{ const d=f.n&&f.n.m&&f.n.m[mes]; return d?d.min:undefined; };
+  const presupuestoFinca=()=>Number(S.config.presupuesto)||35000;
+  function tone(v){ if(v==null) return ""; return v<=24000?"t-ok":v<=30000?"t-warn":"t-bad"; }
+  function cellTot(t){
+    if(!t) return `<td class="nd">—</td>`;
+    return `<td class="${tone(t.v)} ${t.c?"":"aprox"}" title="${t.c?"Del dosier":"Estimado: confirmar"}">${t.c?"":"≈"}${k(t.v)}</td>`;
+  }
+  const yn=v=>v===1||v===true||v==="si"?'<span class="y">✓</span>':v===0||v===false?'<span class="n">✗</span>':'<span class="q">?</span>';
+  const gil=v=>v==="si"?'<span class="y">✓</span>':typeof v==="number"?`+${String(v).replace(".",",")} €`:'<span class="q">?</span>';
+  const voto=(f,w)=>{ const v=Number((f.votos||{})[w])||0; return v?String(v):'<span class="nd">–</span>'; };
+  const score=f=>{ const v=f.votos||{}; return (Number(v.javier)||0)+(Number(v.laura)||0); };
+  function rangoMin(f){
+    const m=f.n&&f.n.m; const xs=m?Object.values(m).map(d=>d.min).filter(x=>x!=null):[];
+    if(xs.length){ const a=Math.min(...xs),b=Math.max(...xs); return a===b?String(a):a+"–"+b; }
+    return f.n&&f.n.minS!=null?String(f.n.minS):'<span class="q">?</span>';
+  }
+  function estadoPill(e){ const c=e==="Favorita"?"fav":e==="Han respondido"?"resp":(e==="Visita prevista"||e==="Visitada")?"vis":""; return `<span class="st ${c}">${esc(e||"")}</span>`; }
+
+  // ---------- vistas ----------
+  function renderKpis(){
     const act=S.fincas.filter(f=>f.estado!=="Descartada");
+    const conPrecio=act.filter(f=>f.n&&f.n.m).length;
+    const resp=act.filter(f=>["Han respondido","Visita prevista","Visitada","Favorita"].includes(f.estado)).length;
+    const visitas=act.filter(f=>f.estado==="Visita prevista").length;
+    const fecha=(S.decisiones.find(d=>d.id==="fecha")||{}).decision||"Pendiente";
+    const pend=S.tareas.filter(t=>!t.hecho).length;
+    const K=[["Presupuesto",eur(presupuestoFinca())],["Fecha",fecha],["Invitados","120–140"],["Fincas activas",act.length],["Responden · con precio",resp+" · "+conPrecio],["Visitas dic.",visitas]];
+    $("#kpis").innerHTML=K.map(([l,v])=>`<div class="kpi"><div class="l">${l}</div><div class="v" title="${esc(v)}">${esc(v)}</div></div>`).join("");
     $("#c-fincas").textContent=act.length;
     $("#c-decisiones").textContent=S.decisiones.filter(d=>!d.decision).length;
-    $("#c-tareas").textContent=S.tareas.filter(t=>!t.hecho).length;
+    $("#c-tareas").textContent=pend;
     document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===UI.tab)));
   }
-  function voteRow(f,w){
-    const v=Number((f.votos||{})[w])||0; let dots="";
-    const can=editor()&&YO.w===w;
-    for(let i=1;i<=5;i++) dots+=can?`<button type="button" class="dot edit ${i<=v?"on":""}" data-act="vote" data-id="${esc(f.id)}" data-v="${i}" aria-label="${i} de 5"></button>`:`<span class="dot ${i<=v?"on":""}" aria-hidden="true"></span>`;
-    return `<div class="vote-row"><span class="name">${nm(w)}</span><span class="dots" role="img" aria-label="${nm(w)}: ${v?v+" de 5":"sin votar"}">${dots}</span><span class="small muted num">${v?v+"/5":"sin votar"}</span></div>`;
-  }
-  function fincaCard(f){
-    const cls=f.estado==="Descartada"?"descartada":f.estado==="Favorita"?"favorita":"";
-    const fotos=safeUrl(f.fotos), web=safeUrl(f.web);
-    return `<article class="card ${cls}">
-      <div class="card-head"><div><h3>${esc(f.nombre)}</h3><div class="zona">${esc(f.zona||"")}</div></div>
-        ${editor()?`<select class="ed-sel" data-act="estado" data-id="${esc(f.id)}" aria-label="Estado">${ESTADOS.map(e=>`<option ${e===f.estado?"selected":""}>${e}</option>`).join("")}</select>`:`<span class="pill est ${f.estado==="Favorita"?"fav":""}">${esc(f.estado||"")}</span>`}</div>
-      <div class="votes">${voteRow(f,"javier")}${voteRow(f,"laura")}</div>
-      <dl class="ficha">${FICHA.map(([k,l])=>`<div><dt>${l}</dt><dd>${f[k]?esc(f[k]):'<span class="muted">Por confirmar</span>'}</dd></div>`).join("")}</dl>
-      ${editor()?`<div class="ed-grid" style="display:grid;gap:8px"><label class="ed">Precio<textarea data-act="txt" data-id="${esc(f.id)}" data-k="precioTxt">${esc(f.precioTxt||"")}</textarea></label><label class="ed">Para vosotros (notas)<textarea data-act="txt" data-id="${esc(f.id)}" data-k="importante">${esc(f.importante||"")}</textarea></label><label class="ed">Fecha de visita<input type="date" data-act="visita" data-id="${esc(f.id)}" value="${esc(f.visita||"")}"></label></div>`:""}
-      <div class="row2">
-        ${f.visita?`<span class="visita">Visita: ${esc(new Date(f.visita+"T12:00:00").toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"}))}</span>`:""}
-        ${fotos?`<a class="fotos" href="${esc(fotos)}" target="_blank" rel="noopener noreferrer">Ver fotos ↗</a>`:""}
-        ${web?`<a href="${esc(web)}" target="_blank" rel="noopener noreferrer">Web</a>`:""}</div>
-    </article>`;
+  function claveOrden(f){
+    if(UI.orden==="votos") return -score(f);
+    const t=UI.vista==="mes"?total(f,"mar",UI.inv)||MESES.map(([m])=>total(f,m,UI.inv)).find(Boolean):total(f,UI.mes,UI.inv);
+    return t?t.v:1e9;
   }
   function viewFincas(){
     let list=S.fincas.slice();
-    if(UI.hideDiscarded && UI.filter!=="Descartada") list=list.filter(f=>f.estado!=="Descartada");
-    if(UI.filter!=="Todas") list=list.filter(f=>f.estado===UI.filter);
-    list.sort((a,b)=>{
-      if(UI.sort==="nombre") return a.nombre.localeCompare(b.nombre,"es");
-      return score(b)-score(a)||(a.orden||99)-(b.orden||99);
-    });
-    const chips=["Todas",...ESTADOS].map(s=>{ const c=s==="Todas"?"":" "+S.fincas.filter(f=>f.estado===s).length; return `<button type="button" class="chip" data-act="filter" data-v="${s}" aria-pressed="${UI.filter===s}">${s}${c}</button>`; }).join("");
-    return `<div class="toolbar">${chips}<span class="spacer"></span>
-      <label class="small muted"><input type="checkbox" id="hideDisc" data-act="hide" ${UI.hideDiscarded?"checked":""}> Ocultar descartadas</label>
-      <select id="sortSel" data-act="sort" aria-label="Ordenar"><option value="votos" ${UI.sort==="votos"?"selected":""}>Por votos</option><option value="nombre" ${UI.sort==="nombre"?"selected":""}>Por nombre</option></select></div>
-      ${list.length?`<div class="grid">${list.map(fincaCard).join("")}</div>`:'<div class="empty">No hay fincas en este filtro.</div>'}`;
+    if(UI.ocultar) list=list.filter(f=>f.estado!=="Descartada");
+    list.sort((a,b)=>claveOrden(a)-claveOrden(b)||(a.orden||99)-(b.orden||99));
+    const seg=(arr,cur,act)=>`<span class="seg">${arr.map(([v,l])=>`<button type="button" data-act="${act}" data-v="${v}" aria-pressed="${String(v)===String(cur)}">${l}</button>`).join("")}</span>`;
+    const bar=`<div class="bar">
+      ${seg([["mes","Por mes"],["inv","Por invitados"]],UI.vista,"vista")}
+      ${UI.vista==="mes"?`<span class="lbl">Invitados</span>${seg(INV.map(n=>[n,n]),UI.inv,"inv")}`:`<span class="lbl">Mes</span>${seg(MESES,UI.mes,"mes")}`}
+      <span class="spacer"></span>
+      <span class="lbl">Orden</span>${seg([["precio","€"],["votos","Votos"]],UI.orden,"orden")}
+      <label class="lbl"><input type="checkbox" data-act="ocultar" ${UI.ocultar?"checked":""}> Ocultar descartadas</label>
+    </div>
+    <div class="legend"><span>Sábado · finca + menú + barra + DJ · IVA incl. · miles de €</span>
+      <span><i class="sw" style="background:var(--ok-bg);border:1px solid var(--ok)"></i>≤ 24 k</span>
+      <span><i class="sw" style="background:var(--warn-bg);border:1px solid var(--warn)"></i>24–30 k</span>
+      <span><i class="sw" style="background:var(--bad-bg);border:1px solid var(--bad)"></i>&gt; 30 k</span>
+      <span><i>≈</i> estimado</span></div>`;
+    const cols=UI.vista==="mes"?MESES.map(([,l])=>l):INV.map(String);
+    const head=`<tr><th class="fx l">Finca</th>${cols.map((c,i)=>`<th class="${i===0?"bl":""}">${c}</th>`).join("")}
+      ${UI.vista==="inv"?`<th>€/inv</th>`:""}
+      <th class="bl">Mín. inv.</th><th>Coche</th><th class="c">Barra</th><th class="c">DJ</th><th>Gildas</th><th class="c">Excl.</th><th>Reseñas</th>
+      <th class="bl c">J</th><th class="c">L</th><th class="l">Estado</th></tr>`;
+    const NC=cols.length+(UI.vista==="inv"?1:0)+11;
+    const rows=list.map(f=>{
+      const n=f.n||{};
+      let celdas;
+      if(n.m){
+        celdas=UI.vista==="mes"?MESES.map(([m])=>cellTot(total(f,m,UI.inv))).join(""):INV.map(x=>cellTot(total(f,UI.mes,x))).join("");
+        if(UI.vista==="inv"){ const t=total(f,UI.mes,130); celdas+=`<td>${t?Math.round(t.v/130)+" €":'<span class="nd">—</span>'}</td>`; }
+        celdas=celdas.replace("<td class=\"",'<td class="bl ');
+      } else {
+        const span=cols.length+(UI.vista==="inv"?1:0);
+        celdas=`<td class="ref bl" colspan="${span}">${n.ref?"Bodas.net "+esc(n.ref)+" €/inv":"Sin precio"}</td>`;
+      }
+      const rsn=n.res?(n.nota?String(n.nota).replace(".",",")+" · ":"")+n.res:'<span class="nd">–</span>';
+      const open=UI.abierta===f.id;
+      return `<tr class="row ${f.estado==="Descartada"?"desc":""} ${open?"open":""}" data-act="abrir" data-id="${esc(f.id)}">
+        <td class="fx"><span class="fn">${esc(f.nombre)}</span></td>${celdas}
+        <td class="bl">${UI.vista==="inv"&&n.m?(minMes(f,UI.mes)??'<span class="q">?</span>'):rangoMin(f)}</td>
+        <td>${n.t!=null?n.t+"′":""}</td><td class="c">${yn(n.barra)}</td><td class="c">${yn(n.dj)}</td><td>${gil(n.gil)}</td><td class="c">${yn(n.ex)}</td><td>${rsn}</td>
+        <td class="bl c">${voto(f,"javier")}</td><td class="c">${voto(f,"laura")}</td><td class="l">${estadoPill(f.estado)}</td></tr>
+        ${open?`<tr class="det"><td colspan="${NC}">${detalle(f)}</td></tr>`:""}`;
+    }).join("");
+    return bar+`<div class="tw"><table><thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
+  }
+  function detalle(f){
+    const n=f.n||{};
+    const C=[["Tarifa",n.y||"?"],["Reserva",n.resv!=null?eur(n.resv):"?"],["¿Se devuelve?",n.reemb===0?"No":n.reemb===1?"Sí":"?"],["Pago final",n.pago!=null?(n.pago?n.pago+" días antes":"El día"):"?"],
+      ["Mín. sábado",n.m?rangoMin(f).replace(/<[^>]+>/g,""):(n.minS!=null?n.minS:"?")],["Coche",n.t!=null?n.t+" min":"?"],["Votos J · L",(Number((f.votos||{}).javier)||"–")+" · "+(Number((f.votos||{}).laura)||"–")],["Visita",f.visita?new Date(f.visita+"T12:00:00").toLocaleDateString("es-ES",{day:"numeric",month:"short"}):"–"]];
+    const cells=`<div class="cells">${C.map(([l,v])=>`<div class="cell"><div class="l">${l}</div><div class="v">${esc(v)}</div></div>`).join("")}</div>`;
+    const mx=n.m?`<div class="mx"><table><thead><tr><th class="l">Invitados</th>${MESES.map(([,l])=>`<th>${l}</th>`).join("")}</tr></thead><tbody>${INV.map(x=>`<tr><td class="l fn">${x}</td>${MESES.map(([m])=>cellTot(total(f,m,x))).join("")}</tr>`).join("")}
+      <tr><td class="l muted">€/inv (130)</td>${MESES.map(([m])=>{const t=total(f,m,130);return `<td class="muted">${t?Math.round(t.v/130):"—"}</td>`;}).join("")}</tr></tbody></table></div>`:"";
+    const fotos=safeUrl(f.fotos), web=safeUrl(f.web);
+    const links=`<div class="links">${fotos?`<a href="${esc(fotos)}" target="_blank" rel="noopener noreferrer">Fotos ↗</a>`:""}${web?`<a href="${esc(web)}" target="_blank" rel="noopener noreferrer">Web ↗</a>`:""}${/@/.test(f.email||"")?`<span class="muted">${esc(f.email)}</span>`:""}</div>`;
+    let ed="";
+    if(editor()){
+      const v=Number((f.votos||{})[YO.w])||0;
+      ed=`<div class="edrow">
+        <label>Estado<select data-act="estado" data-id="${esc(f.id)}">${ESTADOS.map(e=>`<option ${e===f.estado?"selected":""}>${e}</option>`).join("")}</select></label>
+        <label>${YO.w?"Tu voto ("+(YO.w==="javier"?"Javier":"Laura")+")":"Elige arriba quién eres"}<select data-act="voto" data-id="${esc(f.id)}" ${YO.w?"":"disabled"}>${[0,1,2,3,4,5].map(i=>`<option value="${i}" ${i===v?"selected":""}>${i||"–"}</option>`).join("")}</select></label>
+        <label>Visita<input type="date" data-act="visita" data-id="${esc(f.id)}" value="${esc(f.visita||"")}"></label></div>`;
+    }
+    const N=[["Precio","precioTxt"],["Incluye","incluye"],["Mínimos","minimo"],["Para vosotros","importante"],["Opiniones","opiniones"]].filter(([,kk])=>f[kk]);
+    const notes=N.length?`<details class="notes"><summary>Notas del dosier</summary><dl>${N.map(([l,kk])=>`<div><dt>${l}</dt><dd>${esc(f[kk])}</dd></div>`).join("")}</dl></details>`:"";
+    return `<div class="det-grid">${cells}${mx}${links}${ed}${notes}</div>`;
   }
   function viewDecisiones(){
     const list=S.decisiones.slice().sort((a,b)=>(!!a.decision)-(!!b.decision)||(a.orden||99)-(b.orden||99));
-    const cards=list.map(d=>`<article class="card dec">
-      <div class="card-head"><div><h3>${esc(d.titulo)}</h3>${d.contexto?`<div class="zona" style="margin-top:4px">${esc(d.contexto)}</div>`:""}</div>
-        <span class="pill ${d.decision?"done":"open"}">${d.decision?"Decidido":"Pendiente"}</span></div>
-      ${editor()?`<div class="opins"><label class="ed">Javier opina<textarea data-act="dec" data-col="decisiones" data-id="${esc(d.id)}" data-k="javier">${esc(d.javier||"")}</textarea></label><label class="ed">Laura opina<textarea data-act="dec" data-col="decisiones" data-id="${esc(d.id)}" data-k="laura">${esc(d.laura||"")}</textarea></label></div><label class="ed">Decisión final<textarea data-act="dec" data-col="decisiones" data-id="${esc(d.id)}" data-k="decision">${esc(d.decision||"")}</textarea></label>`:""}
-      ${(!editor()&&(d.javier||d.laura))?`<div class="opins">${d.javier?`<div class="opin"><b>Javier opina</b>${esc(d.javier)}</div>`:""}${d.laura?`<div class="opin"><b>Laura opina</b>${esc(d.laura)}</div>`:""}</div>`:""}
-      ${(!editor()&&d.decision)?`<div><span class="small muted">Decisión</span><div>${esc(d.decision)}</div></div>`:""}
-    </article>`).join("");
-    return `<div class="toolbar"><span class="muted small">Lo que Javier y Laura tienen que decidir.</span></div>${cards?`<div class="grid">${cards}</div>`:'<div class="empty">No hay decisiones abiertas.</div>'}`;
+    const inp=(d,kk)=>editor()?`<textarea data-act="dec" data-id="${esc(d.id)}" data-k="${kk}" rows="2">${esc(d[kk]||"")}</textarea>`:(d[kk]?esc(d[kk]):'<span class="nd">–</span>');
+    const rows=list.map(d=>`<tr><td class="wrap"><div class="fn">${esc(d.titulo)}</div>${d.contexto?`<div class="sub">${esc(d.contexto)}</div>`:""}</td>
+      <td class="wrap">${inp(d,"javier")}</td><td class="wrap">${inp(d,"laura")}</td><td class="wrap">${inp(d,"decision")}</td>
+      <td class="c">${d.decision?'<span class="st resp">Hecho</span>':'<span class="st vis">Pendiente</span>'}</td></tr>`).join("");
+    return `<div class="bar"></div><div class="tw"><table><thead><tr><th class="l">Decisión</th><th class="l">Javier</th><th class="l">Laura</th><th class="l">Final</th><th class="c">Estado</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
   function viewTareas(){
+    const hoy=new Date().toISOString().slice(0,10);
     const list=S.tareas.slice().sort((a,b)=>(!!a.hecho)-(!!b.hecho)||String(a.fecha||"9999").localeCompare(String(b.fecha||"9999"))||(a.orden||99)-(b.orden||99));
-    const rows=list.map(t=>`<div class="task ${t.hecho?"done":""}" style="grid-template-columns:auto 1fr auto auto">
-      <input type="checkbox" ${t.hecho?"checked":""} ${editor()?`data-act="tarea" data-id="${esc(t.id)}"`:"disabled"} aria-label="${t.hecho?"Hecha":"Pendiente"}">
-      <span class="t">${esc(t.texto)}</span><span class="quien">${esc(t.quien||"")}</span>
-      <span class="quien num">${t.fecha?esc(new Date(t.fecha+"T12:00:00").toLocaleDateString("es-ES",{day:"numeric",month:"short"})):""}</span></div>`).join("");
-    return `<div class="toolbar"><span class="muted small">${S.tareas.filter(t=>!t.hecho).length} pendientes · ${S.tareas.filter(t=>t.hecho).length} hechas</span></div>${rows?`<div class="tasks">${rows}</div>`:'<div class="empty">No hay tareas.</div>'}${editor()?`<form class="addbar" id="addTarea"><input id="nt-texto" placeholder="Nueva tarea" required><select id="nt-quien"><option>Javier</option><option>Laura</option><option>Los dos</option><option>Familia</option></select><input id="nt-fecha" type="date"><button class="btn-primary" type="submit">Añadir</button></form>`:""}`;
+    const rows=list.map(t=>`<tr class="${t.hecho?"done":""}">
+      <td class="c"><input type="checkbox" ${t.hecho?"checked":""} ${editor()?`data-act="tarea" data-id="${esc(t.id)}"`:"disabled"} aria-label="Hecha"></td>
+      <td class="wrap tt">${esc(t.texto)}</td><td class="l">${esc(t.quien||"")}</td>
+      <td class="${!t.hecho&&t.fecha&&t.fecha<hoy?"late":""}">${t.fecha?esc(new Date(t.fecha+"T12:00:00").toLocaleDateString("es-ES",{day:"numeric",month:"short"})):'<span class="nd">–</span>'}</td></tr>`).join("");
+    const add=editor()?`<form class="addbar" id="addTarea"><input id="nt-texto" placeholder="Nueva tarea" required><select id="nt-quien"><option>Javier</option><option>Laura</option><option>Los dos</option><option>Familia</option></select><input id="nt-fecha" type="date"><button class="btn-primary" type="submit">Añadir</button></form>`:"";
+    return `<div class="bar"></div><div class="tw"><table><thead><tr><th class="c">✓</th><th class="l">Tarea</th><th class="l">Quién</th><th>Fecha</th></tr></thead><tbody>${rows}</tbody></table></div>${add}`;
   }
   function render(){
-    renderHeader();
+    renderKpis();
     const v={fincas:viewFincas,decisiones:viewDecisiones,tareas:viewTareas}[UI.tab]||viewFincas;
     $("#view").innerHTML=v()+(editor()?'<div class="status" id="saveStatus" role="status"></div>':"");
     $("#editbar").hidden=!editor();
     document.querySelectorAll("#editbar [data-yo]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.yo===YO.w)));
-    if(editor()){ $("#footTxt").textContent="Modo edición: los cambios se guardan al momento y los ven también las familias. No se pueden borrar fincas desde aquí."; }
+    if(editor()) $("#footTxt").textContent="Modo edición: se guarda al momento y lo ven también las familias.";
   }
-  document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>{ UI.tab=b.dataset.tab; try{localStorage.setItem("boda-tab",UI.tab);}catch(e){} render(); }));
+
+  // ---------- eventos ----------
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>{ UI.tab=b.dataset.tab; lsSet("boda-tab",UI.tab); render(); }));
   $("#view").addEventListener("click",e=>{
-    const b=e.target.closest('[data-act="filter"]'); if(b){ UI.filter=b.dataset.v; render(); return; }
-    const d=e.target.closest('[data-act="vote"]');
-    if(d&&editor()&&YO.w){
-      const f=S.fincas.find(x=>x.id===d.dataset.id); if(!f) return;
-      const n=Number(d.dataset.v); const actual=Number((f.votos||{})[YO.w])||0;
-      const votos={...(f.votos||{}),[YO.w]:actual===n?0:n};
-      guardar("fincas",f.id,{votos}).then(render);
+    const s=e.target.closest("button[data-act]");
+    if(s){
+      const a=s.dataset.act, v=s.dataset.v;
+      if(a==="vista"){UI.vista=v;lsSet("boda-vista",v);}
+      else if(a==="inv"){UI.inv=Number(v);lsSet("boda-inv",v);}
+      else if(a==="mes"){UI.mes=v;lsSet("boda-mes",v);}
+      else if(a==="orden"){UI.orden=v;lsSet("boda-orden",v);}
+      render(); return;
     }
+    if(e.target.closest("a,select,input,textarea,label,details")) return;
+    const r=e.target.closest('tr[data-act="abrir"]');
+    if(r){ UI.abierta=UI.abierta===r.dataset.id?"":r.dataset.id; render(); }
   });
-  $("#editbar").addEventListener("click",e=>{ const b=e.target.closest("[data-yo]"); if(!b) return; YO.w=b.dataset.yo; try{localStorage.setItem("boda-yo",YO.w);}catch(x){} render(); });
+  $("#editbar").addEventListener("click",e=>{ const b=e.target.closest("[data-yo]"); if(!b) return; YO.w=b.dataset.yo; lsSet("boda-yo",YO.w); render(); });
   $("#view").addEventListener("submit",e=>{
     if(e.target.id!=="addTarea") return; e.preventDefault();
     const texto=$("#nt-texto").value.trim(); if(!texto) return;
@@ -365,13 +393,15 @@ details[open] summary{margin-bottom:8px}
     rpc("boda_guardar",{p_password:S.pw,p_coleccion:"tareas",p_id:id,p_data:{texto:o.texto,quien:o.quien,fecha:o.fecha,hecho:false,orden:99}})
       .then(()=>{render();setStatus("Guardado");}).catch(()=>{S.tareas.pop();render();setStatus("No se ha podido guardar la tarea.",true);});
   });
-  $("#view").addEventListener("change",e=>{ const el=e.target; if(el.dataset.act==="hide"){ UI.hideDiscarded=el.checked; render(); } else if(el.dataset.act==="sort"){ UI.sort=el.value; render(); }
-    else if(!editor()) return;
-    else if(el.dataset.act==="estado"){ guardar("fincas",el.dataset.id,{estado:el.value}).then(render); }
-    else if(el.dataset.act==="visita"){ guardar("fincas",el.dataset.id,{visita:el.value}); }
-    else if(el.dataset.act==="txt"){ guardar("fincas",el.dataset.id,{[el.dataset.k]:el.value}); }
-    else if(el.dataset.act==="dec"){ guardar("decisiones",el.dataset.id,{[el.dataset.k]:el.value}); }
-    else if(el.dataset.act==="tarea"){ guardar("tareas",el.dataset.id,{hecho:el.checked}).then(render); }
+  $("#view").addEventListener("change",e=>{
+    const el=e.target, a=el.dataset.act;
+    if(a==="ocultar"){ UI.ocultar=el.checked; lsSet("boda-ocultar",el.checked?"1":"0"); render(); return; }
+    if(!editor()) return;
+    if(a==="estado") guardar("fincas",el.dataset.id,{estado:el.value}).then(render);
+    else if(a==="voto"&&YO.w){ const f=S.fincas.find(x=>x.id===el.dataset.id); if(f) guardar("fincas",f.id,{votos:{...(f.votos||{}),[YO.w]:Number(el.value)}}).then(render); }
+    else if(a==="visita") guardar("fincas",el.dataset.id,{visita:el.value});
+    else if(a==="dec") guardar("decisiones",el.dataset.id,{[el.dataset.k]:el.value}).then(renderKpis);
+    else if(a==="tarea") guardar("tareas",el.dataset.id,{hecho:el.checked}).then(render);
   });
 
   const guardada=getPw();
