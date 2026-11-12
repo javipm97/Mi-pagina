@@ -165,7 +165,7 @@ body { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
 
 <script>
 /* ---------- contenido ---------- */
-const FR = [['1/3','33,3%'],['2/3','66,7%'],['1/6','16,7%'],['5/6','83,3%'],['1/7','14,3%'],['1/8','12,5%'],['3/8','37,5%'],['5/8','62,5%'],['7/8','87,5%'],['1/9','11,1%'],['1/11','9,1%'],['1/12','8,3%'],['1/15','6,7%'],['1/16','6,25%'],['1/20','5%']];
+const FR = [['1/3','33,3%'],['2/3','66,7%'],['1/6','16,7%'],['5/6','83,3%'],['1/7','14,3%'],['1/8','12,5%'],['3/8','37,5%'],['5/8','62,5%'],['7/8','87,5%'],['1/9','11,1%'],['1/11','9,1%'],['1/12','8,3%'],['1/15','6,7%'],['1/16','6,25%'],['1/20','5%'],['1/25','4%']];
 const SQ = [[12,144],[13,169],[14,196],[15,225],[16,256],[25,625]];
 const POP = [['EE. UU.','~335 M'],['UE','~450 M'],['Alemania','~84 M'],['Reino Unido','~67 M'],['España','~48 M'],['Mundo','~8.000 M']];
 const RULES = [
@@ -175,6 +175,7 @@ const RULES = [
   { q: '¿Cómo sacas el 10% de un número?', a: 'Moviendo la coma una posición', d: ['Dividiendo entre 5','Multiplicando por 1,1','Dividiendo entre 100'], e: 'Mover la coma una posición' },
   { q: '¿Cómo sacas el 5% de un número?', a: 'La mitad del 10%', d: ['Un quinto del número','El doble del 10%','Un cuarto del número'], e: 'Mitad del 10%' },
   { q: '¿Cómo sacas el 15% de un número?', a: '10% + la mitad de ese 10%', d: ['Un quinto del número','10% + 10%','Dividir entre 15'], e: '10% + 5%' },
+  { q: '¿Cómo divides un número entre 25?', a: 'Multiplicas por 4 y divides entre 100', d: ['Divides entre 5 y luego entre 4','Multiplicas por 25 y divides entre 1.000','Divides entre 100 y multiplicas por 25'], e: '× 4 y ÷ 100 (340 / 25 = 1.360 / 100 = 13,6)' },
   { q: '% de cambio', a: '(Nuevo − Antiguo) / Antiguo', d: ['(Nuevo − Antiguo) / Nuevo','Nuevo / Antiguo','(Antiguo − Nuevo) / Nuevo'], e: '(Nuevo − Antiguo) / Antiguo' },
   { q: 'Margen bruto', a: '(Ingresos − COGS) / Ingresos', d: ['(Ingresos − COGS) / COGS','COGS / Ingresos','Ingresos / COGS'], e: '(Ingresos − COGS) / Ingresos' },
   { q: 'El cambio de un margen (66% → 65%) se dice en…', a: 'Puntos porcentuales (pp)', d: ['Porcentaje (%)','Variación relativa (%)','Veces (x)'], e: 'Puntos porcentuales: −1 pp, no −1%' },
