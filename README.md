@@ -70,3 +70,11 @@ Una pregunta cada vez sobre estados de EE. UU., Latinoamérica y Centroamérica 
 
 - **Un único `mapas/index.html`** con los mapas ya dibujados dentro (SVG generado a partir de `world-atlas` y `us-atlas`).
 - **Datos:** tabla `mapas_progreso` (una sola fila, `id = 'javi'`, con el progreso en `data`). Solo la lee y escribe la cuenta `javipm.97@gmail.com`. Usa la misma sesión que la página principal; sin sesión funciona igual pero guarda solo en el navegador.
+
+## Casos (`/casos/`)
+
+Drills diarios para entrevistas de consultoría: cálculo mental, márgenes y P&L, lectura de tablas, gráficos, estructuras, market sizing, síntesis y brainstorming. La pantalla de inicio propone 3 al día. Tiene su propia pestaña en la barra de la página principal.
+
+- **`casos/index.html`** con la aplicación y **`casos/data-*.js`** con el banco de 330 drills abiertos, ordenados en tres niveles. Los de cálculo, márgenes, tablas y gráficos se generan con números nuevos cada vez.
+- **Datos:** tabla `casos_progreso` (una sola fila, `id = 'javi'`, con el progreso en `data`). Solo la lee y escribe la cuenta `javipm.97@gmail.com`. Usa la misma sesión que la página principal; sin sesión funciona igual pero guarda solo en el navegador.
+- **Qué guarda `data`:** `days` (drills por día), `stats` (número y acierto por categoría), `done` (nota de cada drill abierto: 1 flojo, 2 regular, 3 bien), `plan` (los 3 drills de hoy) y `log` (las últimas 400 sesiones, con los fallos de cálculo y, en las 60 más recientes, el texto de la respuesta). Claude lee esta fila para seguir el progreso.

@@ -111,7 +111,8 @@ nav.tabs {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 30;
   padding: 6px; border-radius: 999px; width: max-content; max-width: calc(100% - 24px);
 }
-nav.tabs ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 2px; }
+nav.tabs ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; border-radius: 999px; }
+nav.tabs ul::-webkit-scrollbar { display: none; }
 nav.tabs a {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
   min-width: 54px; min-height: 52px; padding: 0 7px; border-radius: 999px;
@@ -339,6 +340,7 @@ figure.chart figcaption { font-size: 13px; color: var(--ink-3); margin-top: 8px;
       <li><a href="#cambio" data-v="cambio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>€ / $</a></li>
       <li><a href="mapas/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Mapas</a></li>
       <li><a href="calculo/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8.5 7.5h7M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"/></svg>Cálculo</a></li>
+      <li><a href="casos/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Casos</a></li>
     </ul>
   </nav>
 </div>
