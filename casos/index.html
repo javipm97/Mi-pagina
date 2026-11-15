@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casos · Mi página</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mi página">
+<link rel="manifest" href="../manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* Layout: una columna de móvil; fondo agrupado gris claro, tarjetas blancas sin borde, tipografía del sistema, un solo color de acento. */
+:root{
+  --bg:#F2F2F7; --surface:#FFFFFF; --ink:#000000; --muted:#6E6E73; --line:rgba(60,60,67,.14);
+  --accent:#007AFF; --accent-ink:#FFFFFF; --soft:rgba(0,122,255,.10); --fill:rgba(120,120,128,.12);
+  --good:#248A3D; --good-soft:rgba(52,199,89,.14); --bad:#D70015; --bad-soft:rgba(255,59,48,.10);
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --bar:rgba(249,249,249,.86);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#000000; --surface:#1C1C1E; --ink:#FFFFFF; --muted:#98989F; --line:rgba(84,84,88,.6);
+    --accent:#0A84FF; --accent-ink:#FFFFFF; --soft:rgba(10,132,255,.18); --fill:rgba(120,120,128,.24);
+    --good:#30D158; --good-soft:rgba(48,209,88,.16); --bad:#FF453A; --bad-soft:rgba(255,69,58,.16);
+    --bar:rgba(22,22,24,.86); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#1C1C1E; --ink:#FFFFFF; --muted:#98989F; --line:rgba(84,84,88,.6);
+  --accent:#0A84FF; --accent-ink:#FFFFFF; --soft:rgba(10,132,255,.18); --fill:rgba(120,120,128,.24);
+  --good:#30D158; --good-soft:rgba(48,209,88,.16); --bad:#FF453A; --bad-soft:rgba(255,69,58,.16);
+  --bar:rgba(22,22,24,.86); color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.4;letter-spacing:-.01em;display:flex;justify-content:center;-webkit-font-smoothing:antialiased}
+#app{width:100%;max-width:560px;height:100%;display:flex;flex-direction:column}
+main{flex:1;overflow-y:auto;padding:28px 20px 32px;display:flex;flex-direction:column;gap:16px}
+nav{display:flex;background:var(--bar);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--line);padding:6px 0 10px}
+nav button{flex:1;background:none;border:0;padding:4px;font:500 11px var(--body);color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav button[aria-current="page"]{color:var(--accent)}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance}
+h1{font-size:34px;line-height:1.1;letter-spacing:-.025em} h2{font-size:28px;line-height:1.15;letter-spacing:-.02em} h3{font-size:20px;line-height:1.2;letter-spacing:-.015em;font-weight:600}
+p{margin:0}
+.eyebrow{font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}
+.muted{color:var(--muted)} .small{font-size:14px}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.chip{font:600 14px var(--body);padding:6px 12px;border-radius:999px;background:var(--soft);color:var(--accent);white-space:nowrap}
+.card{background:var(--surface);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:12px} .row>.card{flex:1;min-width:0;gap:4px}
+.big{font:700 44px/1.05 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:99px;background:var(--fill);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--accent);width:0;transition:width .35s ease}
+.week{display:flex;justify-content:space-between;gap:4px}
+.week div{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
+.week b{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--fill);font:600 14px var(--body);color:var(--muted)}
+.week .on b{background:var(--accent);color:var(--accent-ink)}
+.week .today b{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.btn{display:block;width:100%;padding:15px 18px;border-radius:14px;border:0;background:var(--accent);color:var(--accent-ink);font:600 17px var(--body);letter-spacing:-.01em;cursor:pointer;text-align:center;transition:opacity .15s,transform .15s}
+.btn:active{opacity:.7;transform:scale(.985)}
+.btn.ghost{background:var(--soft);color:var(--accent)}
+.btn:disabled{opacity:.4}
+.btns{display:flex;gap:8px} .btns .btn{padding:14px 6px;font-size:15px}
+.item{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:0;border-radius:16px;padding:14px 16px;color:var(--ink);font:inherit;cursor:pointer;transition:opacity .15s}
+.item:active{opacity:.6}
+.item::after{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:rotate(45deg);opacity:.45}
+.item .no{flex:none;min-width:36px;height:36px;padding:0 6px;border-radius:10px;display:grid;place-items:center;background:var(--fill);font:600 15px var(--body);color:var(--muted);font-variant-numeric:tabular-nums}
+.item .tx{flex:1;min-width:0} .item .tx b{display:block;font-weight:600;font-size:16px;line-height:1.3}
+.item .tx span{font-size:14px;color:var(--muted);line-height:1.3}
+.item .st{flex:none;font:500 14px var(--body);color:var(--muted)}
+.item.done .no{background:var(--soft);color:var(--accent)}
+.back{align-self:flex-start;background:none;border:0;padding:2px 0;color:var(--accent);font:400 17px var(--body);cursor:pointer}
+.q{font-size:20px;font-weight:600;line-height:1.3;letter-spacing:-.015em}
+.q b{font-variant-numeric:tabular-nums}
+.ansrow{display:flex;gap:10px;align-items:center}
+input.num{flex:1;min-width:0;padding:13px 16px;border-radius:14px;border:0;background:var(--surface);color:var(--ink);font:600 24px var(--display);font-variant-numeric:tabular-nums;box-shadow:inset 0 0 0 1px var(--line)}
+input.num:focus,textarea:focus{outline:none;box-shadow:inset 0 0 0 2px var(--accent)}
+.unit{font:600 18px var(--body);color:var(--muted);min-width:22px}
+textarea{width:100%;min-height:150px;padding:14px 16px;border-radius:16px;border:0;background:var(--surface);color:var(--ink);font:400 17px/1.4 var(--body);resize:vertical;box-shadow:inset 0 0 0 1px var(--line)}
+.fb{border-radius:16px;padding:14px 16px;font-size:15px;line-height:1.45;background:var(--surface)}
+.fb.ok{background:var(--good-soft)} .fb.ko{background:var(--bad-soft)}
+.fb b.v{font-weight:700}
+.fb.ok b.v{color:var(--good)} .fb.ko b.v{color:var(--bad)}
+.clock{display:flex;align-items:center;gap:12px}
+.clock span{font:600 22px var(--display);font-variant-numeric:tabular-nums;min-width:50px}
+.clock span.small{font:400 14px var(--body);min-width:0}
+.clock.over span:first-child{color:var(--bad)} .clock.over .bar i{background:var(--bad)} .clock .bar{flex:1}
+.tablewrap{overflow-x:auto;border-radius:16px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:11px 12px;text-align:right;border-bottom:.5px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:12px;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0;font-weight:600}
+.model{border-radius:18px;background:var(--surface);padding:18px;font-size:15px;line-height:1.45}
+.model ul,.model ol{margin:6px 0 0;padding-left:20px} .model li{margin:4px 0}
+.model h3{font-size:16px;margin-top:14px} .model h3:first-child{margin-top:0}
+.hyp{margin-top:14px;padding-top:14px;border-top:.5px solid var(--line);font-style:italic}
+.btns.col{flex-direction:column} .btns.col .btn{text-align:left;padding:14px 16px;line-height:1.35;font-weight:500}
+.chart{background:var(--surface);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.chart svg{display:block;width:100%;height:auto}
+.chart text{font:500 11px var(--body);fill:var(--muted)} .chart text.v{fill:var(--ink);font-weight:600}
+.sync{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px}
+.sync i{width:8px;height:8px;border-radius:4px;background:var(--muted);flex:none}
+.sync.ok i{background:var(--good)} .sync.err i{background:var(--bad)} .sync a{color:var(--accent)}
+details{background:var(--surface);border-radius:16px;padding:0 18px}
+summary{cursor:pointer;padding:16px 0;font:600 17px var(--body);list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+summary::after{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);opacity:.5;transition:transform .2s}
+details[open] summary::after{transform:rotate(-135deg)}
+summary::-webkit-details-marker{display:none}
+details .body{padding:0 0 18px;font-size:15px;line-height:1.45;display:flex;flex-direction:column;gap:10px}
+details .ex{background:var(--fill);border-radius:12px;padding:12px 14px;font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.bar i,.btn,.item,summary::after{transition:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <main id="main"></main>
+  <nav>
+    <button type="button" data-tab="hoy"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h12v-9"/></svg>Hoy</button>
+    <button type="button" data-tab="drills"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg>Drills</button>
+    <button type="button" data-tab="teoria"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5c-2-1.3-4.5-1.7-7.5-1.5v13c3-.2 5.5.2 7.5 1.5 2-1.3 4.5-1.7 7.5-1.5V5c-3-.2-5.5.2-7.5 1.5z"/><path d="M12 6.5v13"/></svg>Teoría</button>
+  </nav>
+</div>
+<script src="data-sizing.js"></script>
+<script src="data-struct1.js"></script>
+<script src="data-struct2.js"></script>
+<script src="data-synth.js"></script>
+<script src="data-brain.js"></script>
+<script>
+"use strict";
+/* ---------- utilidades ---------- */
+const $=s=>document.querySelector(s);
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[ri(0,a.length-1)];
+const fmt=n=>Number(n).toLocaleString("en-US",{maximumFractionDigits:1});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dkey=d=>{const z=new Date(d);z.setMinutes(z.getMinutes()-z.getTimezoneOffset());return z.toISOString().slice(0,10)};
+const today=()=>dkey(new Date());
+const addDays=(k,n)=>{const d=new Date(k+"T12:00:00");d.setDate(d.getDate()+n);return dkey(d)};
+const mmss=s=>Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
+function parseNum(v){
+  v=String(v).replace(/[\s%€$]/g,"");
+  if(/^-?\d{1,3}([.,]\d{3})+$/.test(v)) v=v.replace(/[.,]/g,"");
+  else v=v.replace(",",".");
+  return v===""?NaN:Number(v);
+}
+
+/* ---------- estado (se guarda en este dispositivo) ---------- */
+const KEY="casos-v1";
+const SUPABASE_URL="https://mwsapcjzubisdszmwswp.supabase.co";
+const SUPABASE_KEY="sb_publishable_oe1TNOb-Y-Lu3jYI8wr5XA_nLDluFOf"; // clave pública: los datos los protege la base de datos
+let S={days:{},stats:{},done:{},log:[],goal:3,plan:null,updatedAt:0};
+try{const raw=localStorage.getItem(KEY);if(raw)S=Object.assign(S,JSON.parse(raw))}catch(e){}
+let sb=null,syncOn=false,pushT=null,syncMsg=["",'Solo en este navegador. <a href="../">Entra en Mi página</a> para guardarlo en tu cuenta.'];
+function save(){S.updatedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(syncOn){clearTimeout(pushT);pushT=setTimeout(push,700)}}
+function setSync(state,txt){syncMsg=[state,txt];const el=document.getElementById("syncText");if(el){el.className="small muted sync "+state;el.querySelector("span").innerHTML=txt}}
+async function push(){
+  clearTimeout(pushT);pushT=null;
+  const{error}=await sb.from("casos_progreso").upsert({id:"javi",data:S,updated_at:new Date().toISOString()});
+  if(error)setSync("err","No se pudo guardar en la nube. Se reintentará en el próximo drill.");else setSync("ok","Progreso guardado en tu cuenta");
+}
+/* une lo de este navegador con lo de la nube sin perder nada de ninguno */
+function merge(a,b){
+  const o={days:{},stats:{},done:{},log:[],goal:a.goal||b.goal||3,plan:null,updatedAt:Math.max(a.updatedAt||0,b.updatedAt||0)};
+  for(const s of [a,b]){
+    for(const[k,v]of Object.entries(s.days||{}))o.days[k]=Math.max(o.days[k]||0,v);
+    for(const[k,v]of Object.entries(s.stats||{}))if(!o.stats[k]||v.n>o.stats[k].n)o.stats[k]=v;
+    for(const[k,v]of Object.entries(s.done||{}))o.done[k]=Math.max(o.done[k]||0,v);
+  }
+  const seen=new Set();o.log=(a.log||[]).concat(b.log||[]).filter(e=>!seen.has(e.t)&&seen.add(e.t)).sort((x,y)=>x.t-y.t).slice(-400);
+  const pa=a.plan,pb=b.plan,ok=p=>p.items.filter(x=>x.ok).length;
+  o.plan=!pa?pb||null:!pb?pa:pa.d!==pb.d?(pa.d>pb.d?pa:pb):(ok(pa)>=ok(pb)?pa:pb);
+  return o;
+}
+async function initSync(){
+  if(!window.supabase){setSync(...syncMsg);return}
+  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"mi-pagina-auth"}});
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){setSync(...syncMsg);return}
+  const{data,error}=await sb.from("casos_progreso").select("data").eq("id","javi").maybeSingle();
+  if(error){setSync("err","No se pudo leer tu progreso de la nube. Recarga para reintentar.");return}
+  syncOn=true;
+  if(data&&data.data&&Object.keys(data.data).length)S=merge(S,data.data);
+  if(S.plan&&S.plan.d===today()&&!S.plan.items.some(x=>x.ok))S.plan=null; // el plan se rehace con lo ya hecho en la nube
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  await push();
+  if(tab==="hoy"&&!tick)show("hoy");
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&syncOn&&pushT)push()});
+function record(cat,score,id,x){
+  const t=today();S.days[t]=(S.days[t]||0)+1;
+  const st=S.stats[cat]||(S.stats[cat]={n:0,sum:0});st.n++;st.sum+=score;
+  if(S.plan&&S.plan.d===t){const p=S.plan.items.find(x=>!x.ok&&x.c===cat&&(!x.id||x.id===id));if(p)p.ok=1}
+  S.log.push(Object.assign({t:Date.now(),d:t,c:cat,s:Math.round(score*100)/100},id?{id}:{},x||{}));
+  let k=0;for(let i=S.log.length-1;i>=0;i--)if(S.log[i].a&&++k>60)delete S.log[i].a;
+  if(S.log.length>400)S.log=S.log.slice(-400);
+  save();
+}
+/* nivel de los drills generados: sube con práctica y acierto */
+function lvl(c){const s=S.stats[c];if(!s)return 1;const a=s.sum/s.n;return s.n>=25&&a>=.75?3:s.n>=10&&a>=.7?2:1}
+function streak(){let d=today();if(!S.days[d])d=addDays(d,-1);let n=0;while(S.days[d]){n++;d=addDays(d,-1)}return n}
+function weekKeys(){const t=new Date();const dow=(t.getDay()+6)%7;const mon=addDays(today(),-dow);return [0,1,2,3,4,5,6].map(i=>addDays(mon,i))}
+
+/* ---------- categorías ---------- */
+const CATS=[
+ {id:"mental",n:"Cálculo mental",d:"Sprint de 60 s, sin calculadora",kind:"sprint"},
+ {id:"quant",n:"Márgenes y P&L",d:"5 problemas con la solución paso a paso",kind:"set"},
+ {id:"tabla",n:"Lectura de tablas",d:"P&L por segmentos y so what",kind:"table"},
+ {id:"graf",n:"Gráficos",d:"El so what de un gráfico en 30 s",kind:"chart"},
+ {id:"struct",n:"Estructuras",d:"Árbol MECE con hipótesis en 2 min",kind:"open",t:120},
+ {id:"sizing",n:"Market sizing",d:"Estimación razonada en 3 min",kind:"open",t:180},
+ {id:"synth",n:"Síntesis",d:"Recomendación top-down en 60 s",kind:"open",t:60},
+ {id:"brain",n:"Brainstorming",d:"Ideas ordenadas en cubos, 2 min",kind:"open",t:120}
+];
+const CHK={
+ struct:"Comprueba: 3 o 4 áreas que no se solapan · 2 o 3 puntos por área, propios de este cliente y no genéricos · dices por dónde empezarías y por qué.",
+ sizing:"Comprueba: nombras el enfoque antes de calcular (de arriba abajo o de abajo arriba) · supuestos redondos y dichos en voz alta · comprobación de sentido al final.",
+ synth:"Comprueba: respuesta en la primera frase · el número que la sostiene · un riesgo · el siguiente paso.",
+ brain:"Comprueba: 2 a 4 cubos antes de la primera idea · ideas concretas, no categorías · dices cuál priorizarías."
+};
+const cat=id=>CATS.find(c=>c.id===id);
+
+/* ---------- generadores: cálculo mental ---------- */
+const MENTAL=[
+ ()=>{const a=ri(5,40)*100,b=ri(11,Math.max(12,a/10-1))*10;return{q:`<b>${fmt(a)} − ${fmt(b)}</b>`,a:a-b,tol:0,unit:"",ex:`${fmt(a)} − ${fmt(b)} = ${fmt(a-b)}`}},
+ ()=>{const p=pick([5,10,15,20,25,30,40,60,75]),n=ri(2,40)*20;return{q:`<b>${p}% of ${fmt(n)}</b>`,a:p*n/100,tol:0,unit:"",ex:`${p}% de ${fmt(n)} = ${fmt(p*n/100)}`}},
+ ()=>{const b=pick([200,250,300,400,500,600,800,1200,1500]),a=Math.round(b*ri(5,90)/1000)*10;return{q:`<b>${fmt(a)} / ${fmt(b)}</b> as a percentage`,a:a/b*100,tol:1.5,unit:"%",ex:`${fmt(a)} / ${fmt(b)} = ${fmt(a/b*100)}%`}},
+ ()=>{const a=ri(2,9)*10+ri(0,1)*5,b=ri(3,12)*10;return{q:`<b>${a} × ${b}</b>`,a:a*b,tol:0,unit:"",ex:`${a} × ${b} = ${fmt(a*b)}`}},
+ ()=>{const a=ri(2,20)*100,p=pick([-40,-30,-25,-20,-15,-10,-5,5,10,15,20,25,30,40,50,60]),b=a*(1+p/100);return{q:`From <b>${fmt(a)}</b> to <b>${fmt(b)}</b>: % change`,a:p,tol:1,unit:"%",ex:`(${fmt(b)} − ${fmt(a)}) / ${fmt(a)} = ${p}%`}}
+];
+
+/* ---------- generadores: márgenes y P&L ---------- */
+const QUANT=[
+ ()=>{const R=ri(3,15)*100,m=ri(8,45),P=Math.round(R*m/1000)*10,C=R-P;
+  return{q:`Revenue is <b>€${fmt(R)}k</b> and total costs are <b>€${fmt(C)}k</b>. What is the operating margin?`,a:P/R*100,tol:1,unit:"%",
+  ex:`Beneficio = ${fmt(R)} − ${fmt(C)} = ${fmt(P)}. Margen = ${fmt(P)} / ${fmt(R)} = <b>${fmt(P/R*100)}%</b>. Comprueba: ¿más o menos que la mitad? ${P/R<.5?"Menos":"Más"}, cuadra.`}},
+ ()=>{const p=ri(4,20),v=ri(1,p-1),cm=p-v,u=ri(2,30)*100,F=cm*u;
+  return{q:`Price per unit <b>€${p}</b>, variable cost per unit <b>€${v}</b>, fixed costs <b>€${fmt(F)}</b>. How many units to break even?`,a:u,tol:0,unit:"u",
+  ex:`Margen de contribución = ${p} − ${v} = €${cm} por unidad. Breakeven = fijos / contribución = ${fmt(F)} / ${cm} = <b>${fmt(u)} unidades</b>.`}},
+ ()=>{const R1=ri(4,12)*100,m1=ri(10,30),R2=R1+ri(-2,3)*100,m2=m1+pick([-8,-6,-5,-4,-3,3,4,5]);
+  return{q:`Year 1: revenue <b>${fmt(R1)}</b>, profit <b>${fmt(R1*m1/100)}</b>. Year 2: revenue <b>${fmt(R2)}</b>, profit <b>${fmt(R2*m2/100)}</b>. By how many percentage points did the margin change?`,a:m2-m1,tol:.6,unit:"pp",
+  ex:`Margen año 1 = ${fmt(R1*m1/100)} / ${fmt(R1)} = ${m1}%. Margen año 2 = ${fmt(R2*m2/100)} / ${fmt(R2)} = ${m2}%. Cambio = <b>${m2-m1>0?"+":""}${m2-m1} puntos</b>.`}},
+ ()=>{const o=ri(2,20)*20,d=pick([10,20,25,50]),x=o*(1+d/100);
+  return{q:`After a <b>${d}%</b> price increase, the price is <b>€${fmt(x)}</b>. What was the original price?`,a:o,tol:0,unit:"€",
+  ex:`Precio nuevo = original × ${1+d/100}. Original = ${fmt(x)} / ${1+d/100} = <b>€${fmt(o)}</b>. Ojo: no es restar el ${d}% al precio nuevo.`}},
+ ()=>{const p=ri(5,15),v=ri(2,p-2),q=ri(2,12)*1000,F=ri(2,(p-v)*q/1000-1)*1000,pr=(p-v)*q-F;
+  return{q:`A plant sells <b>${fmt(q)}</b> units at <b>€${p}</b>. Variable cost is <b>€${v}</b> per unit and fixed costs are <b>€${fmt(F)}</b>. What is the profit?`,a:pr,tol:0,unit:"€",
+  ex:`Contribución = (${p} − ${v}) × ${fmt(q)} = €${fmt((p-v)*q)}. Menos fijos ${fmt(F)} = <b>€${fmt(pr)}</b>.`}},
+ ()=>{const Ra=ri(3,9)*100,Rb=ri(2,8)*100,ma=ri(20,40),mb=ri(4,14),P=Ra*ma/100+Rb*mb/100;
+  return{q:`Segment A: revenue <b>${fmt(Ra)}</b>, margin <b>${ma}%</b>. Segment B: revenue <b>${fmt(Rb)}</b>, margin <b>${mb}%</b>. What is the total margin?`,a:P/(Ra+Rb)*100,tol:1,unit:"%",
+  ex:`Beneficio A = ${fmt(Ra*ma/100)}, beneficio B = ${fmt(Rb*mb/100)}, total ${fmt(P)}. Ingresos totales ${fmt(Ra+Rb)}. Margen = <b>${fmt(P/(Ra+Rb)*100)}%</b>. Si B crece más que A, este margen baja aunque ningún segmento empeore: efecto mix.`}}
+];
+
+/* ---------- generadores de nivel 2 y 3 ---------- */
+const MENTAL2=[
+ ()=>{const p=pick([20,25,40,50,80,120,150,300]),u=pick([200,400,500,800,2000]),r=p*u/1000;return{q:`<b>€${fmt(r)}M</b> revenue / <b>${fmt(u)}k</b> units: price per unit`,a:p,tol:0,unit:"€",ex:`${fmt(r)}M / ${fmt(u)}k = ${fmt(r*1000)} / ${fmt(u)} = €${p}`}},
+ ()=>{const p=pick([12,15,35,45,65]),n=ri(11,95)*10;return{q:`<b>${p}% of ${fmt(n)}</b>`,a:p*n/100,tol:.5,unit:"",ex:`${p}% de ${fmt(n)} = ${fmt(p*n/100)}`}},
+ ()=>{const b=ri(1,9)*100,g=pick([10,20,50]),a=Math.round(b*(1+g/100)*(1+g/100));return{q:`<b>${fmt(b)}</b> grows <b>${g}%</b> two years in a row: final value`,a,tol:0,unit:"",ex:`${fmt(b)} × ${1+g/100} × ${1+g/100} = ${fmt(a)}. No es sumar ${2*g}%.`}},
+ ()=>{const f=pick([[1,6],[1,7],[1,8],[1,9],[3,8],[5,8],[2,3],[5,6],[7,8],[1,12]]);return{q:`<b>${f[0]}/${f[1]}</b> as a percentage`,a:f[0]/f[1]*100,tol:1,unit:"%",ex:`${f[0]}/${f[1]} = ${fmt(f[0]/f[1]*100)}%`}}
+];
+const MENTAL3=[
+ ()=>{const c=ri(11,95)/10,p=pick([15,20,25,40,45,60,120]);return{q:`<b>${c}M</b> customers × <b>€${p}</b>: revenue in € million`,a:c*p,tol:.6,unit:"€M",ex:`${c} × ${p} = €${fmt(c*p)}M`}},
+ ()=>{const n=pick([4,6,8,9,12,18]);return{q:`Revenue doubles in <b>${n} years</b>: approximate annual growth`,a:72/n,tol:1.6,unit:"%",ex:`Regla del 72: 72 / ${n} ≈ ${fmt(72/n)}% al año`}},
+ ()=>{const n=ri(2,40)*20,p=pick([5,15,20,25,40,60]);return{q:`<b>${fmt(p*n/100)}</b> is <b>${p}%</b> of what number?`,a:n,tol:0,unit:"",ex:`${fmt(p*n/100)} / ${p/100} = ${fmt(n)}`}}
+];
+const QUANT2=[
+ ()=>{const s=ri(2,9)*50,y=pick([2,2.5,3,4,5]),I=s*y;return{q:`An automation project costs <b>€${fmt(I)}k</b> and saves <b>€${fmt(s)}k</b> a year. Payback in years?`,a:y,tol:.1,unit:"yrs",ex:`Payback = inversión / ahorro anual = ${fmt(I)} / ${fmt(s)} = <b>${y} años</b>.`}},
+ ()=>{const p=pick([5,10,20]),v=pick([2,5,10]),a=((1+p/100)*(1-v/100)-1)*100;return{q:`Price rises <b>${p}%</b> and volume falls <b>${v}%</b>. By what % does revenue change?`,a,tol:.6,unit:"%",ex:`${(1+p/100).toFixed(2)} × ${(1-v/100).toFixed(2)} = ${((1+p/100)*(1-v/100)).toFixed(3)}, es decir <b>${a>0?"+":""}${a.toFixed(1)}%</b>. No es ${p} − ${v}.`}},
+ ()=>{const m=pick([5,10,20,25]),x=pick([1,2,5]);return{q:`Operating margin is <b>${m}%</b>. Price rises <b>${x}%</b> with volume and costs unchanged. By what % does profit rise?`,a:x/m*100,tol:.6,unit:"%",ex:`Todo el aumento de precio cae a beneficio: ${x} puntos sobre un margen de ${m} = <b>+${fmt(x/m*100)}%</b>. Por eso el precio es la palanca más potente.`}},
+ ()=>{const r=ri(4,12)*10,h=pick([8,16,24]),o=pick([50,60,75,80]),out=Math.round(r*h*o/100);return{q:`A line is rated at <b>${r} units/hour</b> and runs <b>${h} hours</b> a day at <b>${o}% OEE</b>. Daily output?`,a:out,tol:0,unit:"u",ex:`${r} × ${h} = ${fmt(r*h)} teóricas. × ${o}% = <b>${fmt(out)} unidades</b>.`}}
+];
+const QUANT3=[
+ ()=>{const c1=ri(3,8),cut=ri(1,c1-1),c2=c1-cut,k=ri(1,5),v=ri(2,9),p=v+c1,F=c1*c2*k*100;return{q:`Price <b>€${p}</b>, variable cost <b>€${v}</b>, fixed costs <b>€${fmt(F)}</b>. You cut the price by <b>€${cut}</b>. New breakeven in units?`,a:c1*k*100,tol:0,unit:"u",ex:`Contribución nueva = ${p} − ${cut} − ${v} = €${c2}. Breakeven = ${fmt(F)} / ${c2} = <b>${fmt(c1*k*100)}</b> (antes ${fmt(c2*k*100)}).`}},
+ ()=>{const Q=ri(2,10)*1000,f=ri(1,6),v=ri(2,9);return{q:`Fixed costs are <b>€${fmt(f*Q)}</b> and variable cost is <b>€${v}</b> per unit. What is the full cost per unit at <b>${fmt(Q)}</b> units?`,a:v+f,tol:0,unit:"€",ex:`Fijo por unidad = ${fmt(f*Q)} / ${fmt(Q)} = €${f}. Más variable ${v} = <b>€${v+f}</b>. A la mitad de volumen, el fijo por unidad se dobla.`}},
+ ()=>{const V=ri(2,20)*10,r=pick([5,8,10,20]),X=V*r/100;return{q:`A business generates <b>€${fmt(X)}M</b> of cash a year, flat forever. At a <b>${r}%</b> discount rate, what is it worth?`,a:V,tol:.5,unit:"€M",ex:`Perpetuidad = flujo / tasa = ${fmt(X)} / ${r/100} = <b>€${fmt(V)}M</b>.`}},
+ ()=>{const M=ri(4,20)*100,s=pick([10,20,25,40]),g=pick([10,25]);return{q:`The market is <b>${fmt(M)}</b> and grows <b>${g}%</b>. Our sales stay flat at <b>${fmt(M*s/100)}</b>. What is our new market share?`,a:s/(1+g/100),tol:.6,unit:"%",ex:`Mercado nuevo = ${fmt(M*(1+g/100))}. Cuota = ${fmt(M*s/100)} / ${fmt(M*(1+g/100))} = <b>${fmt(s/(1+g/100))}%</b> (antes ${s}%).`}}
+];
+const QUANTMS=[
+ ()=>{const m=pick([0.1,0.2,0.25,0.5]),c=pick([1.5,1.9,2.5,3]),F=pick([20,30,40,60]),s=pick([2,4,5,8,10]),u=F/m,U=u*100/s;return{q:`A new drink would sell at <b>$${(c+m).toFixed(2)}</b> a bottle and costs <b>$${c.toFixed(2)}</b> to make and deliver. Fixed costs are <b>$${F}M</b> a year. The market is <b>${fmt(U)}M</b> bottles a year. What market share does it need to break even?`,a:s,tol:.3,unit:"%",ex:`1) Margen por botella = $${m.toFixed(2)}. 2) Botellas para cubrir los fijos = ${F}M / ${m.toFixed(2)} = ${fmt(u)}M. 3) Cuota = ${fmt(u)} / ${fmt(U)} = <b>${s}%</b>. Añade si esa cuota es realista para un producto nuevo.`}},
+ ()=>{const R=pick([800,1000,1200,2000]),up=pick([5,10]),g=R*up/200,r=pick([5,10]),net=g-r,y=pick([2,3,4,5]),I=net*y;return{q:`A client with <b>€${fmt(R)}M</b> of revenue expects a programme to lift revenue by <b>${up}%</b>, at a <b>50%</b> margin on the extra sales. It needs one-off investments of <b>€${fmt(I*.5)}M</b> in IT, <b>€${fmt(I*.3)}M</b> in training and <b>€${fmt(I*.2)}M</b> in stores, plus <b>€${r}M</b> a year of running costs. How many years until it pays back?`,a:y,tol:.1,unit:"yrs",ex:`1) Ventas extra = ${fmt(R*up/100)}M, margen extra = ${fmt(g)}M. 2) Menos ${r}M de costes anuales = ${fmt(net)}M al año. 3) Inversión total = ${fmt(I)}M. 4) ${fmt(I)} / ${fmt(net)} = <b>${y} años</b>.`}},
+ ()=>{const D=pick([100,120]),L=pick([4,5]),fd=pick([30,36,45]),fe=pick([12,15,18]),md=pick([5,6]),me=pick([3,4]),od=pick([10,12]),oe=pick([5,6]),sv=fd+md+od-fe-me-oe,a=D+sv*L;return{q:`A diesel truck costs <b>€${D}k</b> and lasts <b>${L} years</b> with no resale value. Each year it costs <b>€${fd}k</b> in fuel, <b>€${md}k</b> in maintenance and <b>€${od}k</b> in other costs. An electric truck costs <b>€${fe}k</b> in energy, <b>€${me}k</b> in maintenance and <b>€${oe}k</b> in other costs. Driver cost is the same. What is the highest price for the electric truck that keeps the total cost of ownership equal?`,a,tol:0,unit:"€k",ex:`1) Ahorro anual del eléctrico = (${fd}+${md}+${od}) − (${fe}+${me}+${oe}) = ${sv}k. 2) En ${L} años = ${sv*L}k. 3) Precio máximo = ${D} + ${sv*L} = <b>€${a}k</b>. El conductor no cuenta porque cuesta lo mismo.`}}
+];
+const pool=c=>{const l=lvl(c);return c==="mental"?(l===1?MENTAL:l===2?MENTAL.concat(MENTAL2,MENTAL2):MENTAL.concat(MENTAL2,MENTAL3,MENTAL3)):(l===1?QUANT:l===2?QUANT.concat(QUANT2,QUANT2,QUANTMS):QUANT.concat(QUANT2,QUANT3,QUANT3,QUANTMS,QUANTMS))};
+function genTableMix(){
+  for(let k=0;k<200;k++){
+    const names=pick(SEGS),rows=[{n:names[0],R1:ri(5,10)*100,m:ri(25,35)},{n:names[1],R1:ri(2,4)*100,m:ri(5,10)},{n:names[2],R1:ri(3,6)*100,m:ri(14,20)}];
+    rows.forEach((r,i)=>{r.R2=i===1?r.R1*2:r.R1;r.P1=r.R1*r.m/100;r.P2=r.R2*r.m/100});
+    const T={R1:0,P1:0,R2:0,P2:0};rows.forEach(r=>{T.R1+=r.R1;T.P1+=r.P1;T.R2+=r.R2;T.P2+=r.P2});
+    const t1=T.P1/T.R1*100,t2=T.P2/T.R2*100,low=rows[1];
+    if(t1-t2>=1.5){
+      const html=`<div class="tablewrap"><table><tr><th>€k</th><th>Rev Y1</th><th>Profit Y1</th><th>Rev Y2</th><th>Profit Y2</th></tr>${rows.map(r=>`<tr><td>${r.n}</td><td>${fmt(r.R1)}</td><td>${fmt(r.P1)}</td><td>${fmt(r.R2)}</td><td>${fmt(r.P2)}</td></tr>`).join("")}<tr><td>Total</td><td>${fmt(T.R1)}</td><td>${fmt(T.P1)}</td><td>${fmt(T.R2)}</td><td>${fmt(T.P2)}</td></tr></table></div>`;
+      const right="Mix moved to "+low.n;
+      return{pre:html,qs:[
+        {q:`Total margin fell from <b>${fmt(t1)}%</b> to <b>${fmt(t2)}%</b>, yet profit rose. What explains it?`,col:1,opts:["A segment's margin fell",right,"Total revenue fell"],a:right,
+         ex:`Calcula el margen de cada segmento en los dos años: ${rows.map(r=>`${r.n} ${r.m}% y ${r.m}%`).join(", ")}. Ninguno cambia. Lo que cambia es el peso de ${low.n}, el de menor margen.`},
+        {q:`What is the total margin in Year 2?`,a:t2,tol:1,unit:"%",ex:`${fmt(T.P2)} / ${fmt(T.R2)} = <b>${fmt(t2)}%</b>.`}
+      ],after:`<div class="model"><h3>So what, en una frase</h3><p>"Total margin fell ${fmt(t1-t2)} points, but no segment got worse. ${low.n}, the lowest-margin segment at ${low.m}%, doubled its revenue and now weighs more in the mix. Profit still rose from ${fmt(T.P1)} to ${fmt(T.P2)}, so the question is whether that growth is worth having at this margin."</p></div>`};
+    }
+  }
+  return genTable();
+}
+
+/* ---------- generador: gráficos ---------- */
+const CW=320;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=ri(0,i);[a[i],a[j]]=[a[j],a[i]]}return a}
+function svgBars(lab,val,unit){
+  const mx=Math.max(...val),bw=40,gap=(CW-lab.length*bw)/(lab.length+1);
+  return `<svg viewBox="0 0 ${CW} 170" role="img" aria-label="Bar chart">${lab.map((l,i)=>{const h=val[i]/mx*110,x=gap+i*(bw+gap);return `<rect x="${x}" y="${140-h}" width="${bw}" height="${h}" rx="6" fill="var(--accent)"/><text class="v" x="${x+bw/2}" y="${134-h}" text-anchor="middle">${unit}${val[i]}</text><text x="${x+bw/2}" y="158" text-anchor="middle">${l}</text>`}).join("")}</svg>`;
+}
+function svgCombo(rev,mar){
+  const mx=Math.max(...rev),bw=38,gap=(CW-rev.length*bw)/(rev.length+1),pts=mar.map((m,i)=>[gap+i*(bw+gap)+bw/2,26+(26-m)*2.4]);
+  return `<svg viewBox="0 0 ${CW} 200" role="img" aria-label="Bars and line chart">${rev.map((r,i)=>{const h=r/mx*80,x=gap+i*(bw+gap);return `<rect x="${x}" y="${172-h}" width="${bw}" height="${h}" rx="6" fill="var(--fill)"/><text x="${x+bw/2}" y="${188-h}" text-anchor="middle">${fmt(r)}</text><text x="${x+bw/2}" y="190" text-anchor="middle">Y${i+1}</text>`}).join("")}<polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--accent)"/><text class="v" x="${p[0]}" y="${p[1]-9}" text-anchor="middle">${mar[i]}%</text>`).join("")}</svg>`;
+}
+function svgH(lab,p){
+  return `<svg viewBox="0 0 ${CW} ${lab.length*30+4}" role="img" aria-label="Horizontal bar chart">${lab.map((l,i)=>`<text x="0" y="${i*30+19}">${l}</text><rect x="128" y="${i*30+6}" width="${p[i]*3}" height="18" rx="6" fill="var(--accent)"/><text class="v" x="${133+p[i]*3}" y="${i*30+19}">${p[i]}%</text>`).join("")}</svg>`;
+}
+function genChart(){
+  const k=ri(0,2),Q="Which statement is the best takeaway for the client?";
+  if(k===0){
+    const names=shuffle(["North","South","East","West","Central"]),base=ri(8,14),d=ri(3,6),vol=ri(2,9)*100,oi=ri(0,4),rest=shuffle([base-1,base,base,base+1]);
+    const val=names.map((n,i)=>i===oi?base+d:rest.pop()),out=names[oi],pct=Math.round(d/base*100);
+    const right=`${out} is the outlier, about ${pct}% above the rest. Closing that gap comes first.`;
+    return{t:30,pre:`<div class="chart"><p class="eyebrow">Cost per pallet shipped, by warehouse (€)</p>${svgBars(names,val,"€")}</div>`,qs:[
+      {q:Q,col:1,opts:shuffle([right,`Cost per pallet ranges from €${base-1} to €${base+d} across the five warehouses.`,"The whole network is too expensive, so every warehouse needs a cost programme."]),a:right,
+       ex:`La opción del rango solo describe el gráfico. La del programa para todos generaliza: cuatro almacenes están entre €${base-1} y €${base+1}. El mensaje es la excepción y su tamaño.`},
+      {q:`${out} ships <b>${fmt(vol)}k</b> pallets a year. If it matched the average of the other four, how much would it save a year?`,a:d*vol,tol:0,unit:"€k",
+       ex:`Media de los otros cuatro = €${base}. Diferencia = €${d} por palé × ${fmt(vol)}k palés = <b>€${fmt(d*vol)}k</b> al año.`}
+    ],after:`<div class="model"><h3>So what, en 30 segundos</h3><p>"${out} costs €${base+d} per pallet against about €${base} in the other four warehouses, ${pct}% more. Matching them is worth about €${fmt(d*vol)}k a year. I'd compare its order profile and labour productivity with the best site first."</p></div>`};
+  }
+  if(k===1){
+    const R0=ri(4,8)*100,s=ri(5,10)*10,m0=ri(18,24),rev=[0,1,2,3,4].map(i=>R0+i*s),mar=[0,1,2,3,4].map(i=>m0-2*i),P0=R0*m0/100,P4=rev[4]*mar[4]/100;
+    const g=Math.round((rev[4]/R0-1)*100),pc=Math.round((P4/P0-1)*100),pt=pc>=0?(pc<3?"was flat":"rose only "+pc+"%"):"fell "+(-pc)+"%";
+    const right=`Growth is not turning into profit: revenue is up ${g}% but margin fell 8 points, so profit ${pt}.`;
+    return{t:30,pre:`<div class="chart"><p class="eyebrow">Revenue (€M, bars) and operating margin (line)</p>${svgCombo(rev,mar)}</div>`,qs:[
+      {q:Q,col:1,opts:shuffle([right,"Revenue has grown every year, so the strategy is working.","Margin is falling, so the client should cut costs across the business."]),a:right,
+       ex:`La de los ingresos mira una sola serie. La de recortar costes salta a la solución sin saber por qué cae el margen. El mensaje une las dos series y dice qué pasa con el beneficio.`},
+      {q:`What is operating profit in Year 5?`,a:P4,tol:.6,unit:"€M",ex:`${fmt(rev[4])} × ${mar[4]}% = <b>€${fmt(P4)}M</b>. En el año 1 era ${fmt(R0)} × ${m0}% = €${fmt(P0)}M.`}
+    ],after:`<div class="model"><h3>So what, en 30 segundos</h3><p>"Revenue grew ${g}% in four years, but margin fell from ${m0}% to ${mar[4]}%, so profit ${pt}, from €${fmt(P0)}M to €${fmt(P4)}M. The growth is coming at a lower margin. I'd check whether the new sales come from lower-margin customers or from price cuts."</p></div>`};
+  }
+  const sh=pick([[40,30,15,10,5],[45,25,15,10,5],[50,20,15,10,5],[38,32,14,10,6],[42,26,16,10,6]]),ca=shuffle(["Order released late","Stock not available","Picking backlog","Carrier late","Customer not ready"]);
+  let rows=ca.map((c,i)=>[c,sh[i]]);const A=rows[0][0],B=rows[1][0],sm=rows[4][0],top=sh[0]+sh[1],L=ri(4,12)*100;
+  if(lvl("graf")>1)rows=shuffle(rows.slice());
+  const right=`${A} and ${B} explain ${top}% of late deliveries. Fix those two first.`;
+  return{t:30,pre:`<div class="chart"><p class="eyebrow">Late deliveries by cause (% of total)</p>${svgH(rows.map(r=>r[0]),rows.map(r=>r[1]))}</div>`,qs:[
+    {q:Q,col:1,opts:shuffle([right,"Late deliveries have five different causes, so each one needs its own action plan.",`${sm} is where to start, because it is the smallest problem and the quickest to close.`]),a:right,
+     ex:`Cinco planes a la vez no es priorizar, y empezar por la causa más pequeña apenas mueve el total. Dos causas suman el ${top}%.`},
+    {q:`There are <b>${fmt(L)}</b> late deliveries a month. If the two largest causes were halved, how many would remain?`,a:L-L*top/200,tol:0,unit:"",
+     ex:`Las dos mayores suman ${top}% = ${fmt(L*top/100)} entregas. La mitad son ${fmt(L*top/200)}. Quedan ${fmt(L)} − ${fmt(L*top/200)} = <b>${fmt(L-L*top/200)}</b>.`}
+  ],after:`<div class="model"><h3>So what, en 30 segundos</h3><p>"Two causes, ${A.toLowerCase()} and ${B.toLowerCase()}, explain ${top}% of late deliveries. Halving them would cut late deliveries from ${fmt(L)} to ${fmt(L-L*top/200)} a month. I'd start there and leave the other three for later."</p></div>`};
+}
+
+/* ---------- generador: tabla por segmentos ---------- */
+const SEGS=[["Retail","Wholesale","Online"],["Full truckload","LTL","Warehousing"],["Pallet racking","Automation","Services"],["Domestic","Export","Aftermarket"]];
+function genTable(){
+  for(let k=0;k<200;k++){
+    const names=pick(SEGS),c=ri(0,2),rows=names.map((n,i)=>{
+      const R1=ri(4,14)*100,m1=i===c?ri(16,30):ri(10,30);
+      const R2=R1+(i===c?ri(-2,0):ri(-1,1))*100,m2=i===c?m1-ri(6,10):m1+ri(-1,1);
+      return{n,R1,P1:R1*m1/100,R2,P2:R2*m2/100,m1,m2,d:R2*m2/100-R1*m1/100};
+    });
+    const T={R1:0,P1:0,R2:0,P2:0};rows.forEach(r=>{T.R1+=r.R1;T.P1+=r.P1;T.R2+=r.R2;T.P2+=r.P2});
+    const others=rows.filter((r,i)=>i!==c);
+    if(T.P2<T.P1 && others.every(o=>o.d>rows[c].d+8)){
+      const cu=rows[c];
+      const html=`<div class="tablewrap"><table><tr><th>€k</th><th>Rev Y1</th><th>Profit Y1</th><th>Rev Y2</th><th>Profit Y2</th></tr>${rows.map(r=>`<tr><td>${r.n}</td><td>${fmt(r.R1)}</td><td>${fmt(r.P1)}</td><td>${fmt(r.R2)}</td><td>${fmt(r.P2)}</td></tr>`).join("")}<tr><td>Total</td><td>${fmt(T.R1)}</td><td>${fmt(T.P1)}</td><td>${fmt(T.R2)}</td><td>${fmt(T.P2)}</td></tr></table></div>`;
+      return{pre:html,qs:[
+        {q:`The client asks why profit fell from <b>${fmt(T.P1)}</b> to <b>${fmt(T.P2)}</b>. Which segment explains most of the drop?`,opts:names,a:cu.n,
+         ex:`Mira la columna de beneficio, no la de ingresos. Cambio por segmento: ${rows.map(r=>`${r.n} ${r.d>0?"+":""}${fmt(r.d)}`).join(", ")}. El total cae ${fmt(T.P1-T.P2)}.`},
+        {q:`What is the operating margin of <b>${cu.n}</b> in Year 2?`,a:cu.m2,tol:1,unit:"%",
+         ex:`${fmt(cu.P2)} / ${fmt(cu.R2)} = <b>${cu.m2}%</b> (en el año 1 era ${cu.m1}%). Margen = beneficio / ingresos, nunca ingresos − beneficio.`}
+      ],after:`<div class="model"><h3>So what, en una frase</h3><p>"Profit fell by ${fmt(T.P1-T.P2)}, and ${cu.n} explains most of it: its margin dropped from ${cu.m1}% to ${cu.m2}% ${cu.R2===cu.R1?"on flat revenue":"while revenue went from "+fmt(cu.R1)+" to "+fmt(cu.R2)}. I'd look next at price and cost per unit in ${cu.n}."</p></div>`};
+    }
+  }
+}
+
+/* ---------- drills abiertos ---------- */
+const tree=(br,hyp)=>br.map(b=>`<h3>${b[0]}</h3><ul>${b[1].map(x=>`<li>${x}</li>`).join("")}</ul>`).join("")+`<p class="hyp">${hyp}</p>`;
+const steps=(a,end)=>`<ol>${a.map(x=>`<li>${x}</li>`).join("")}</ol><p class="hyp">${end}</p>`;
+const OPEN={
+struct:[
+ {tag:"Operaciones",q:"A racking manufacturer's on-time-in-full (OTIF) delivery rate fell from 94% to 81% in six months. What could explain this, and what information would you need to find the root cause?",
+  m:tree([["Is it 'in full'?",["Stockouts or production shortfalls","Picking and loading errors","Damage in transit"]],["Is it 'on time'? Plant side",["Schedule adherence in production","Dock and loading capacity","Order release and paperwork delays"]],["Is it 'on time'? Transport and customer side",["Carrier capacity and transit times","Appointment windows and site readiness","Late order changes"]],["Did the measurement change?",["OTIF definition or promised dates","Mix of customers, lanes or order sizes"]]],"My hypothesis is that the drop is concentrated in 'on time' at the plant, because a 13-point fall in six months usually follows a volume or mix change. I'd start by splitting the misses into late vs. incomplete.")},
+ {tag:"Profitability",q:"A regional parcel carrier's profit fell 30% last year while revenue stayed flat. What are the main areas you would look into, and where would you start?",
+  m:tree([["Revenue: flat total can hide a worse mix",["Volume by customer type (B2C vs B2B)","Price per parcel and surcharges","Mix of zones and weights"]],["Variable costs",["Fuel and driver cost per stop","Stops per route and drop density","Subcontractor rates"]],["Fixed costs",["Hubs, fleet leases, IT","Overhead added ahead of growth that did not come"]]],"My hypothesis is that B2C grew at the expense of B2B, so revenue held but cost per stop rose. I'd start with revenue and cost per parcel by segment.")},
+ {tag:"Operaciones",q:"A distribution center's cost per pallet shipped rose 18% in one year. Why?",
+  m:tree([["Volume: fewer pallets over the same fixed cost",["Throughput vs last year","Seasonality and peaks"]],["Labor",["Wage rate and overtime","Productivity: pallets per labor hour","Temps and turnover"]],["Other costs",["Rent, energy, equipment leases","Damage, rework, returns"]],["Mix",["More each or case picking vs full pallets","More SKUs, smaller orders"]]],"My hypothesis is that order profile shifted to smaller, mixed orders, which cuts pallets per labor hour. I'd start by comparing productivity and order profile year on year.")},
+ {tag:"Market entry",q:"A European forklift maker is considering entering the US market. What would you look at?",
+  m:tree([["Is the market attractive?",["Size and growth by forklift class","Margins, including service and parts","Competitors and their dealer networks"]],["Can we win?",["Product fit: standards, electric vs LPG","Price position after freight and tariffs","Service coverage, which buyers weigh heavily"]],["How to enter",["Dealers, own branches, or acquisition","Import vs local assembly"]],["Economics and risk",["Investment, time to breakeven","FX, tariffs, warranty exposure"]]],"My hypothesis is that the market is attractive but the decision turns on service coverage, so entry through an acquired dealer network beats greenfield. I'd start with the competitive and channel picture.")},
+ {tag:"Operaciones",q:"A consumer goods company wants to cut inventory by 25% without hurting its service level. How would you approach this, and what information would you need?",
+  m:tree([["Where is the inventory?",["Raw, WIP, finished goods","By site and by SKU class (ABC)","Slow movers and obsolete stock"]],["Cycle stock",["Batch sizes and changeover times","Order quantities and supplier minimums"]],["Safety stock",["Forecast error by SKU","Lead time length and variability","Service targets by SKU class"]],["Network and policy",["Number of stocking points","Make-to-order for the long tail"]]],"My hypothesis is that most of the excess sits in slow-moving SKUs with one-size-fits-all service targets. I'd start with an ABC split of stock vs sales.")},
+ {tag:"M&A / PE",q:"A private equity fund is considering buying a cold-storage warehouse operator. How would you assess the deal?",
+  m:tree([["Market",["Demand growth for frozen and chilled","Capacity being added, occupancy trends","Customer concentration in the region"]],["Target",["Occupancy, price per pallet position, contract length","Energy cost exposure, asset age","Management and customer relationships"]],["Value creation",["Pricing and occupancy","Energy efficiency, automation","Add-on acquisitions"]],["Deal",["Price vs comparable multiples","Exit options and key risks"]]],"My hypothesis is that the deal works if contracts pass energy costs through and occupancy stays above 85%. I'd start with the contract base.")},
+ {tag:"Operaciones",q:"A steel fabricator's plant runs at 95% utilization and lead times have doubled. The CEO wants to build a second plant. What factors should she consider before deciding?",
+  m:tree([["Is the demand durable?",["Order book and pipeline by customer","Cyclical peak vs structural growth"]],["Can the current plant give more?",["Bottleneck step and its OEE","Shifts, overtime, changeovers","Outsourcing non-core steps"]],["Second plant economics",["Capex, ramp-up time","Fixed cost added and breakeven volume","Location: freight and labor"]],["Alternatives and risk",["Acquire capacity, price up to manage demand","Downside if demand falls"]]],"My hypothesis is that the constraint is one bottleneck step, so debottlenecking plus a shift buys two years at a fraction of the capex. I'd start at the bottleneck.")},
+ {tag:"Growth",q:"A grocery chain's online delivery business grows 40% a year but loses money on every order. What should they do?",
+  m:tree([["Revenue per order",["Basket size, delivery fee, minimum order","Supplier-funded promotions, ads"]],["Cost per order",["Picking: store vs dark store, items per hour","Last mile: drops per route, time windows","Substitutions, refunds, packaging"]],["Is the loss strategic?",["Do online customers spend more in total?","Cost of losing them to a rival"]],["Options",["Fix unit economics or cap growth","Shift to click-and-collect or partner"]]],"My hypothesis is that last-mile cost per drop is the main gap and density is the lever. I'd start with a cost-per-order waterfall.")},
+ {tag:"Operaciones",q:"A manufacturer wants to cut its inbound freight spend by 10%. What are the main areas you would look into, and where would you start?",
+  m:tree([["Pay less per shipment",["Rebid lanes, consolidate carriers","Contract vs spot mix, fuel clauses"]],["Ship fewer, fuller trucks",["Load fill and cube utilization","Consolidate suppliers into milk runs","Order frequency and minimums"]],["Ship shorter or cheaper modes",["Supplier location, regional sourcing","Truck to rail or intermodal","Fewer expedites"]],["Shift who pays",["Incoterms and supplier-managed freight","Customer collection"]]],"My hypothesis is that expedites and half-empty trucks are worth more than a rate rebid. I'd start by splitting spend into rate, fill and premium freight.")},
+ {tag:"Pricing",q:"A logistics provider is renewing the contract with its biggest customer, who demands a 10% price cut. How would you think about it?",
+  m:tree([["What is the customer worth?",["Share of revenue and of profit","Fixed costs it absorbs","True cost to serve"]],["How credible is the threat?",["Customer's switching cost and alternatives","Competitors' capacity and prices"]],["What can we trade?",["Longer term, volume commitments","Scope changes that cut our cost","Gain-share on efficiencies"]],["Walk-away point",["Margin floor","Plan to refill the capacity"]]],"My hypothesis is that a straight 10% cut destroys the account's margin, so the answer is a smaller cut tied to term and cost-reducing scope changes. I'd start with profit by account.")}
+],
+sizing:[
+ {tag:"Logística",q:"How many parcel delivery vans operate in the Chicago metro area on a typical day?",
+  m:steps(["Population about 9.5M, so roughly 3.7M households","About 5 parcels per household per week gives 18–19M","Add about 30% for business deliveries: roughly 25M a week","Six delivery days: about 4M parcels a day","A van delivers about 200 parcels a day"],"About 20,000 vans. Sanity check: one van per 185 households feels plausible.")},
+ {tag:"Retail",q:"How many pallets does a large supermarket receive per week?",
+  m:steps(["Weekly sales of a large store: about €600k","Retail value of an average mixed pallet: about €1,500","600,000 / 1,500 = 400 pallets","Fresh and bulky goods have lower value per pallet, so nudge up"],"About 400–500 pallets a week, or 15–20 trucks.")},
+ {tag:"Transporte",q:"Estimate the annual fuel revenue of one large highway truck stop in the US.",
+  m:steps(["Trucks fueling per day: about 400","Gallons per fill: about 100","Price per gallon of diesel: about $4","400 × 100 × 4 = $160k a day","Open 365 days"],"About $58M a year in fuel revenue. Margin on fuel is thin; the profit is in the store and services.")},
+ {tag:"Industrial",q:"How many forklifts are in use in Germany?",
+  m:steps(["Workers in manufacturing: about 8M","Workers in wholesale, logistics and large retail: about 3M","Total 11M in forklift-using sectors","Roughly one forklift per 10 of those workers"],"About 1.1M forklifts. Cross-check: a 7-year life implies about 150k sold a year.")},
+ {tag:"Energía",q:"Estimate the annual market for home EV chargers in the Netherlands, in euros.",
+  m:steps(["New cars sold per year: about 370k","Electric share: about 35%, so 130k","Buyers with private parking who install a charger: about 60%, so 78k","Price installed: about €1,200"],"About €95M a year. Replacements and second chargers add little for now.")},
+ {tag:"Grocery",q:"How many online grocery orders does one leading chain deliver per week in the Madrid metro area?",
+  m:steps(["Population about 6.7M, so about 2.6M households","Households that buy groceries online regularly: about 10%, so 260k","Share of the leading chain: about 25%, so 65k","Order frequency: one every two weeks"],"About 32,000 orders a week, or about 4,600 a day.")}
+],
+synth:[
+ {tag:"Operaciones",q:"CEO question: should we build a second plant? Findings: demand grows 8% a year; the plant runs at 95% utilization; a third shift adds 20% capacity for €2M a year; a new plant costs €60M and takes 3 years.",
+  m:`<p>"No, not yet. Add a third shift now. First, it gives 20% more capacity, which covers about two years of 8% growth. Second, it costs €2M a year against €60M of capex. Third, a new plant would not help for three years anyway. As a next step, I'd confirm the demand outlook and set the trigger point for the plant decision in 12 months."</p>`},
+ {tag:"Profitability",q:"CEO question: should we exit Wholesale? Findings: Wholesale margin fell from 14% to 6%; it absorbs €3M of shared fixed costs; two customers are 70% of its revenue and both asked for discounts.",
+  m:`<p>"No, don't exit, but renegotiate. Wholesale still earns 6% and covers €3M of fixed costs that would fall on the other segments. The margin drop comes from two customers, so the fix is specific: reset terms with them and set a walk-away margin. If they refuse, shrink Wholesale to the profitable accounts. Next step: profit by customer."</p>`},
+ {tag:"Operaciones",q:"COO question: should we outsource our truck fleet to a 3PL? Findings: own fleet costs €1.90 per km at 62% utilization; the 3PL quotes €1.60; 3PL OTIF is 92% vs our 96%; our trucks are 9 years old.",
+  m:`<p>"Yes, outsource, with service guarantees. It saves about 16% per km, and the fleet needs replacing soon, so we avoid that capex. The risk is service: 92% against our 96%. I'd write OTIF penalties into the contract and keep a small own fleet for critical customers during the first year."</p>`},
+ {tag:"Pricing",q:"CEO question: should we raise prices 5%? Findings: we expect to lose 3% of volume; our margin is 20%; the main competitor raised prices 4% last month.",
+  m:`<p>"Yes, raise prices 5%. Revenue rises about 2% and, at a 20% margin, profit rises roughly 20% even after the volume loss. The competitor already moved, which lowers the risk of losing share. I'd roll it out by segment and watch the most price-sensitive accounts for the first quarter."</p>`},
+ {tag:"Supply chain",q:"CFO question: can we cut inventory? Findings: stock is €12M; service level is 99.2% against a 97% target; 40% of SKUs make 5% of sales.",
+  m:`<p>"Yes, by €2–3M without missing the target. We are over-serving: 99.2% against 97%. And the excess is concentrated: 40% of SKUs bring only 5% of sales. I'd lower safety stock on those slow movers first and move the slowest to make-to-order. Next step: an SKU-level stock versus sales cut."</p>`},
+ {tag:"M&A",q:"Board question: should we buy a smaller competitor for €40M? Findings: it earns €4M EBITDA; we estimate €3M of annual cost synergies from merging two warehouses; its top customer, 30% of sales, has a contract ending in 6 months.",
+  m:`<p>"Yes, if the top customer renews. At 10 times EBITDA the price is full, but €3M of synergies bring it under 6 times. The risk is the customer that makes 30% of sales. I'd make the deal conditional on that renewal, or price that risk in. Next step: speak with that customer during due diligence."</p>`}
+],
+brain:[
+ {tag:"Operaciones",q:"How could a warehouse reduce its dock-to-stock time?",
+  m:tree([["Before the truck arrives",["Advance ship notices, appointment scheduling","Supplier labeling and pallet standards"]],["At the dock",["Staging layout, door assignment near put-away zone","Cross-dock fast movers","Scan on receipt instead of paper checks"]],["Put-away",["Directed put-away by the WMS","Slotting, interleaving with picks","Equipment and labor at peak hours"]],["Management",["Measure by supplier, penalize non-compliance"]]],"Lead with the bucket you'd prioritize: here, receiving checks and appointment scheduling usually give the fastest gain.")},
+ {tag:"Transporte",q:"How could a trucking company reduce empty miles?",
+  m:tree([["Find backhauls",["Load boards and brokers","Contracted return lanes with shippers","Partner with carriers on mirror lanes"]],["Plan better",["Route optimization, triangular routes","Flexible pickup windows","Network design: relocate depots"]],["Commercial",["Price backhaul lanes to fill","Target customers in destination areas"]],["Assets",["Trailer pools, drop-and-hook","Equipment that fits more freight types"]]],"Group first, then list. The interviewer scores the buckets more than the count.")},
+ {tag:"Retail",q:"How could a DIY retailer raise revenue per store without opening new stores?",
+  m:tree([["More customers",["Local marketing, trade accounts","Longer hours, click-and-collect"]],["More per visit",["Project bundles, cross-merchandising","Services: installation, tool rental, cutting"]],["Better price and mix",["Private label trade-up","Fewer blanket promotions"]],["More from the box",["Space reallocation to high-margin categories","Use the store as an online fulfilment point"]]],"A formula gives you the buckets: customers × visits × basket × price.")},
+ {tag:"Operaciones",q:"How could a distribution center reduce picking errors?",
+  m:tree([["Process",["Scan confirmation at pick and pack","Check weighing, sample audits","Simpler pick paths"]],["Layout and product",["Separate look-alike SKUs","Clear labels and location codes","Pack sizes that match order units"]],["Technology",["Pick-to-light, voice, RF","WMS rules for substitutions"]],["People",["Training, error feedback per picker","Incentives on accuracy, not only speed","Lower overtime and turnover"]]],"Process, layout, technology, people works for most 'reduce errors' questions.")},
+ {tag:"Supply chain",q:"What are the risks of single-sourcing a critical component, and how would you mitigate them?",
+  m:tree([["Supply risks",["Plant outage, quality failure","Capacity limits when we grow","Logistics disruption"]],["Commercial risks",["Price leverage of the supplier","Supplier's financial health or change of owner"]],["Mitigation: reduce exposure",["Qualify a second source, even at 20% share","Dual tooling, design alternatives"]],["Mitigation: absorb the shock",["Safety stock, supplier-held inventory","Contract terms, audits, early-warning KPIs"]]],"Two-part questions need two-part structures: risks first, then mitigations mapped to them.")}
+]};
+/* banco ampliado: se carga de los ficheros data-*.js y se ordena por nivel */
+const D=window.DATA||{};
+const L2TAG=/Market entry|M&A|Pricing|Growth/;
+["struct","synth","brain"].forEach(k=>OPEN[k].forEach(x=>x.l=L2TAG.test(x.tag)?2:1));
+const kv=s=>s.split("|").map(b=>{const i=b.indexOf(":");return[b.slice(0,i).trim(),b.slice(i+1).split(";").map(t=>t.trim())]});
+(D.struct||[]).forEach(a=>OPEN.struct.push({l:a[0],tag:a[1],q:a[2],m:tree(kv(a[3]),a[4])}));
+(D.brain||[]).forEach(a=>OPEN.brain.push({l:a[0],tag:a[1],q:a[2],m:tree(kv(a[3]),a[4])}));
+(D.synth||[]).forEach(a=>OPEN.synth.push({l:a[0],tag:a[1],q:a[2],m:`<p>"${a[3]}"</p>`}));
+if(D.sizing)OPEN.sizing=D.sizing.map(a=>({l:a[0],tag:a[1],q:a[2],m:steps(a[3].split(";").map(t=>t.trim()),a[4])+(a[5]?`<p class="hyp" style="font-style:normal"><b>Dato real:</b> ${a[5]}</p>`:`<p class="hyp" style="font-style:normal">Sin cifra pública verificada. Aquí se puntúa la lógica y el orden de magnitud.</p>`)}));
+else OPEN.sizing.forEach(x=>x.l=1);
+const PRE={struct:"st",sizing:"sz",synth:"sy",brain:"br"};
+Object.keys(OPEN).forEach(k=>{OPEN[k].forEach((x,i)=>x.id=PRE[k]+i);OPEN[k].sort((a,b)=>a.l-b.l)});
+const TOTAL=Object.keys(OPEN).reduce((n,k)=>n+OPEN[k].length,0);
+const nextOf=k=>OPEN[k].find(x=>!S.done[x.id]);
+const leftOf=k=>OPEN[k].filter(x=>!S.done[x.id]).length;
+
+/* ---------- teoría ---------- */
+const TEORIA=[
+ ["La cascada del P&L",`<p>Ingresos − costes variables (COGS) = <b>margen bruto</b>. Menos gastos operativos (opex) = <b>EBITDA</b>. Menos amortización = <b>EBIT</b> (operating profit). Menos intereses e impuestos = <b>beneficio neto</b>.</p><div class="ex">Puesto de churros: vende 300, harina y aceite 120 → margen bruto 180. Alquiler y sueldo 100 → beneficio 80.</div><p>Beneficio nunca es ingresos, y costes nunca es beneficio. Si restas ingresos − beneficio, lo que obtienes son los costes.</p>`],
+ ["Márgenes",`<p>Margen = beneficio / ingresos, en %. Gross margin usa el margen bruto; operating margin usa el beneficio operativo.</p><div class="ex">80 / 300 = 27%. Comprobación rápida: el 10% de 300 es 30; 80 son algo menos de tres veces 30, luego algo menos del 30%.</div><p>Antes de decir el número, pregúntate si es más o menos que la mitad.</p>`],
+ ["Fijos, variables y breakeven",`<p>Los variables suben con cada unidad; los fijos se pagan vendas o no. Margen de contribución = precio − coste variable por unidad.</p><div class="ex">Churro a 2 €, coste variable 0,80 € → contribución 1,20 €. Fijos 600 € → breakeven = 600 / 1,20 = 500 churros.</div>`],
+ ["Apalancamiento operativo",`<p>Si el volumen sube, los fijos se reparten entre más unidades y el margen sube. Si baja, pasa lo contrario, y rápido.</p><div class="ex">Ventas 300, variables 120, fijos 100 → 27%. Ventas 600, variables 240, fijos 100 → 260 / 600 = 43%.</div><p>Por eso una caída de ventas pequeña puede hundir el margen de un segmento con muchos fijos.</p>`],
+ ["Like-for-like",`<p>LFL compara solo las tiendas que ya existían hace un año. Separa el crecimiento real del que viene de abrir tiendas.</p><p>Si el total crece pero el LFL cae, piensa en canibalización, competencia local o precio. Diagnostica antes de proponer cerrar nada.</p>`],
+ ["Efecto mix",`<p>El margen total es la media ponderada de los segmentos. Si crece el segmento de menor margen, el total baja aunque ningún segmento empeore.</p><div class="ex">A: 600 al 30% → 180. B: 400 al 10% → 40. Total 220 / 1.000 = 22%. Si B pasa a 800: 260 / 1.400 = 18,6%.</div>`],
+ ["Leer una tabla en 5 pasos",`<p>1. Repite la pregunta del cliente. 2. Mira los totales: ¿qué cambió? 3. Busca la fila que explica el cambio, en la columna que responde a la pregunta. 4. Calcula el margen de esa fila. 5. Di el so what en una frase y qué mirarías después.</p>`],
+ ["Abrir una estructura",`<p>3 o 4 ramas que no se solapen y que cubran el problema. Ingresos y costes, no solo costes. Dos o tres sub-puntos por rama.</p><p>Cierra siempre con: <i>"My hypothesis is… so I'd start with…"</i>. Objetivo: menos de 2 minutos.</p>`]
+];
+
+/* ---------- vistas ---------- */
+const main=$("#main");let tick=null,tab="hoy";
+function stop(){if(tick){clearInterval(tick);tick=null}}
+function setTab(t){tab=t;document.querySelectorAll("nav button").forEach(b=>b.dataset.tab===t?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"))}
+function show(t){stop();setTab(t);({hoy:vHoy,drills:vDrills,teoria:vTeoria}[t]||vHoy)();main.scrollTop=0}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{try{location.hash=b.dataset.tab}catch(e){}show(b.dataset.tab)});
+window.addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(["hoy","drills","teoria"].includes(h)&&h!==tab)show(h)});
+
+/* plan del día: 1 drill generado + los 2 bancos abiertos con más drills por hacer */
+function plan(){
+  const t=today();if(S.plan&&S.plan.d===t)return S.plan;
+  const idx=Math.floor(new Date(t+"T12:00:00").getTime()/864e5);
+  const items=[{c:["mental","quant","tabla","graf"][idx%4]}];
+  ["struct","sizing","synth","brain"].map(k=>[k,leftOf(k)]).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]).slice(0,2).forEach(x=>items.push({c:x[0],id:nextOf(x[0]).id}));
+  S.plan={d:t,items};save();return S.plan;
+}
+function weakest(){
+  let w=null;CATS.forEach(c=>{const s=S.stats[c.id];if(s&&s.n>=2){const a=s.sum/s.n;if(!w||a<w.a)w={c,a}}});return w;
+}
+function vHoy(){
+  const t=today(),done=S.days[t]||0,wk=weekKeys(),wkN=wk.reduce((a,k)=>a+(S.days[k]||0),0),pl=plan(),seen=Object.keys(OPEN).reduce((n,k)=>n+OPEN[k].length-leftOf(k),0),w=weakest(),st=streak();
+  const L=["L","M","X","J","V","S","D"];
+  main.innerHTML=`
+  <div class="head"><div><a class="eyebrow" style="color:var(--accent);text-decoration:none" href="../#hoy">‹ Mi página</a><h1>Casos</h1></div><span class="chip">${st} ${st===1?"día":"días"} seguidos</span></div>
+  <div class="card">
+    <div class="head"><p class="eyebrow">Objetivo de hoy</p><b>${Math.min(done,S.goal)} de ${S.goal}</b></div>
+    <div class="bar"><i style="width:${Math.min(100,done/S.goal*100)}%"></i></div>
+    <div class="week">${wk.map((k,i)=>`<div class="${S.days[k]?"on":""} ${k===t?"today":""}"><b>${S.days[k]||""}</b>${L[i]}</div>`).join("")}</div>
+  </div>
+  <button class="btn" id="quick">Sprint de cálculo, 60 s</button>
+  <p class="eyebrow">Plan de hoy · ${seen} de ${TOTAL} drills del banco hechos</p>
+  ${pl.items.map((p,i)=>{const c=cat(p.c),it=p.id&&OPEN[p.c].find(x=>x.id===p.id);return `<button class="item ${p.ok?"done":""}" data-p="${i}"><span class="no">${p.ok?"✓":i+1}</span><span class="tx"><b>${c.n}</b><span>${it?esc(it.q.length>80?it.q.slice(0,78)+"…":it.q):c.d+" · nivel "+lvl(c.id)}</span></span></button>`}).join("")}
+  <div class="row">
+    <div class="card"><p class="eyebrow">Esta semana</p><span class="big">${wkN}</span><p class="small muted">drills hechos</p></div>
+    <div class="card"><p class="eyebrow">Punto débil</p>${w?`<h3>${w.c.n}</h3><p class="small muted">${Math.round(w.a*100)}% de acierto</p>`:`<h3>Sin datos aún</h3><p class="small muted">Sale tras dos drills de una categoría</p>`}</div>
+  </div>
+  <button class="btn ghost" id="copy">Copiar resumen para el reporte del domingo</button>
+  <p class="small muted" id="copymsg"></p>
+  <p class="small muted sync" id="syncText"><i></i><span></span></p>`;
+  setSync(...syncMsg);
+  $("#quick").onclick=()=>startCat("mental");
+  main.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{const p=pl.items[+b.dataset.p],it=p.id&&OPEN[p.c].find(x=>x.id===p.id);it?runOpen(cat(p.c),it):startCat(p.c)});
+  $("#copy").onclick=()=>{
+    const lines=CATS.filter(c=>S.stats[c.id]).map(c=>`- ${c.n}: ${S.stats[c.id].n} drills, ${Math.round(S.stats[c.id].sum/S.stats[c.id].n*100)}% de acierto (acumulado)`);
+    const txt=`Drills esta semana: ${wkN}. Racha: ${st} días.\n${lines.join("\n")||"- Sin drills todavía"}${w?`\nPunto débil: ${w.c.n}`:""}`;
+    const msg=$("#copymsg");
+    try{navigator.clipboard.writeText(txt).then(()=>msg.textContent="Resumen copiado. Pégalo en el chat.",()=>msg.textContent=txt)}catch(e){msg.textContent=txt}
+  };
+}
+function vDrills(){
+  main.innerHTML=`<div><p class="eyebrow">8 categorías</p><h1>Drills</h1></div>`+CATS.map((c,i)=>{
+    const s=S.stats[c.id];
+    return `<button class="item ${s?"done":""}" data-c="${c.id}"><span class="no">${String(i+1).padStart(2,"0")}</span><span class="tx"><b>${c.n}</b><span>${c.d}</span></span><span class="st">${s?Math.round(s.sum/s.n*100)+"%":""}</span></button>`}).join("");
+  main.querySelectorAll(".item").forEach(b=>b.onclick=()=>startCat(b.dataset.c));
+}
+function vTeoria(){
+  main.innerHTML=`<div><p class="eyebrow">Lo mínimo, con el puesto de churros</p><h1>Teoría</h1></div>`+TEORIA.map(t=>`<details><summary>${t[0]}</summary><div class="body">${t[1]}</div></details>`).join("");
+}
+
+/* ---------- arranque de categorías ---------- */
+function startCat(id){
+  stop();setTab("drills");const c=cat(id);
+  if(c.kind==="sprint")return runSprint(c);
+  if(c.kind==="set"){const P=pool("quant");return runSet(c,{qs:Array.from({length:5},()=>pick(P)())})}
+  if(c.kind==="chart")return runSet(c,genChart());
+  if(c.kind==="table")return runSet(c,lvl("tabla")>1&&Math.random()<.5?genTableMix():genTable());
+  vList(c);
+}
+function vList(c){
+  stop();const sc=["","Flojo","Regular","Bien"];
+  const nx=nextOf(c.id),LV=["","Nivel 1 · base","Nivel 2 · intermedio","Nivel 3 · final round"];
+  main.innerHTML=`<button class="back" id="bk">← Drills</button><div><p class="eyebrow">Objetivo ${mmss(c.t)} por drill · ${OPEN[c.id].length-leftOf(c.id)} de ${OPEN[c.id].length} hechos</p><h1>${c.n}</h1></div>${nx?`<button class="btn" id="nxt">Siguiente sin hacer</button>`:""}`+OPEN[c.id].map((it,i)=>{
+    const d=S.done[it.id],hd=i===0||OPEN[c.id][i-1].l!==it.l?`<h3 style="margin-top:12px">${LV[it.l]}</h3>`:"";
+    return hd+`<button class="item ${d?"done":""}" data-i="${i}"><span class="no">${i+1}</span><span class="tx"><b>${it.q.length>70?it.q.slice(0,68)+"…":it.q}</b><span>${it.tag}</span></span><span class="st">${d?sc[d]:""}</span></button>`}).join("");
+  $("#bk").onclick=()=>show("drills");if(nx)$("#nxt").onclick=()=>runOpen(c,nx);
+  main.querySelectorAll(".item").forEach(b=>b.onclick=()=>runOpen(c,OPEN[c.id][+b.dataset.i]));
+  main.scrollTop=0;
+}
+
+/* ---------- sprint de 60 s ---------- */
+function runSprint(c){
+  const R={ok:0,n:0,miss:[],end:Date.now()+60000,cur:null};
+  main.innerHTML=`<button class="back" id="bk">← Salir</button>
+  <div class="clock"><span id="ck">1:00</span><div class="bar"><i id="cb" style="width:100%"></i></div></div>
+  <p class="eyebrow">${c.n} · nivel ${lvl(c.id)} · aciertos <b id="okn">0</b></p>
+  <p class="q" id="qt"></p>
+  <form id="f" class="ansrow"><input class="num" id="ans" inputmode="decimal" autocomplete="off" aria-label="Tu respuesta"><span class="unit" id="un"></span><button class="btn" style="width:auto" type="submit">OK</button></form>
+  <div class="fb" id="fb">Responde y pulsa OK. Los porcentajes valen con ±1 punto.</div>`;
+  const P=pool("mental");const next=()=>{R.cur=pick(P)();$("#qt").innerHTML=R.cur.q;$("#un").textContent=R.cur.unit;$("#ans").value=""};
+  next();$("#ans").focus();
+  $("#bk").onclick=()=>show("drills");
+  $("#f").onsubmit=e=>{
+    e.preventDefault();const v=parseNum($("#ans").value);if(isNaN(v))return;
+    const good=Math.abs(v-R.cur.a)<=R.cur.tol+1e-9;R.n++;if(good)R.ok++;else R.miss.push(R.cur.ex);
+    const fb=$("#fb");fb.className="fb "+(good?"ok":"ko");fb.innerHTML=`<b class="v">${good?"Bien":"No"}</b> · ${R.cur.ex}`;
+    $("#okn").textContent=R.ok;next();$("#ans").focus();
+  };
+  tick=setInterval(()=>{
+    const left=Math.max(0,R.end-Date.now());$("#ck").textContent=mmss(Math.ceil(left/1000));$("#cb").style.width=(left/600)+"%";
+    if(left<=0){stop();const sc=R.n?R.ok/R.n:0;record(c.id,sc,null,{n:R.n,ok:R.ok,miss:R.miss.slice(0,6)});
+      result(c,`<span class="big">${R.ok} de ${R.n}</span><p class="muted">aciertos en 60 segundos${R.n<8?". Objetivo: 10 o más intentos":""}</p>`+(R.miss.length?`<div class="model"><h3>Fallos</h3><ul>${R.miss.map(m=>`<li>${m}</li>`).join("")}</ul></div>`:""),()=>startCat(c.id));}
+  },200);
+}
+
+/* ---------- series con corrección ---------- */
+function runSet(c,set){
+  let i=0,ok=0,sec=0;const miss=[],strip=h=>h.replace(/<[^>]+>/g,"");
+  const draw=()=>{
+    const q=set.qs[i];
+    main.innerHTML=`<button class="back" id="bk">← Salir</button>
+    <p class="eyebrow">${c.n} · nivel ${lvl(c.id)} · ${i+1} de ${set.qs.length}</p>${set.t&&i===0?`<div class="clock" id="cl"><span id="ck">0:00</span><div class="bar"><i id="cb"></i></div><span class="small muted">de ${mmss(set.t)}</span></div>`:""}${set.pre||""}
+    <p class="q">${q.q}</p>
+    ${q.opts?`<div class="btns${q.col?" col":""}" id="opts">${q.opts.map(o=>`<button class="btn ghost" data-o="${esc(o)}">${o}</button>`).join("")}</div>`
+     :`<form id="f" class="ansrow"><input class="num" id="ans" inputmode="decimal" autocomplete="off" aria-label="Tu respuesta"><span class="unit">${q.unit}</span><button class="btn" style="width:auto" type="submit">Comprobar</button></form>`}
+    <div id="out"></div>`;
+    main.scrollTop=0;$("#bk").onclick=()=>show("drills");
+    const t0=Date.now();
+    if(set.t&&i===0){stop();tick=setInterval(()=>{const x=(Date.now()-t0)/1000;$("#ck").textContent=mmss(x);$("#cb").style.width=Math.min(100,x/set.t*100)+"%";$("#cl").classList.toggle("over",x>set.t)},250)}
+    const answer=(good,given)=>{
+      if(set.t&&i===0){stop();sec=Math.round((Date.now()-t0)/1000)}
+      if(good)ok++;else miss.push(strip(q.q)+" → "+given);
+      main.querySelectorAll("#opts button,#f button,#ans").forEach(el=>el.disabled=true);
+      const last=i===set.qs.length-1;
+      $("#out").innerHTML=`<div class="fb ${good?"ok":"ko"}"><b class="v">${good?"Bien":"No"}</b> · ${q.ex}</div>${last&&set.after?set.after:""}<button class="btn" id="nx" style="margin-top:14px">${last?"Ver resultado":"Siguiente"}</button>`;
+      $("#nx").onclick=()=>{if(last){record(c.id,ok/set.qs.length,null,Object.assign({miss:miss.slice(0,6)},set.t?{sec}:{}));result(c,`<span class="big">${ok} de ${set.qs.length}</span><p class="muted">respuestas correctas</p>`,()=>startCat(c.id))}else{i++;draw()}};
+      $("#nx").scrollIntoView({block:"nearest"});
+    };
+    if(q.opts)main.querySelectorAll("#opts button").forEach(b=>b.onclick=()=>answer(b.dataset.o===q.a,b.dataset.o));
+    else{$("#f").onsubmit=e=>{e.preventDefault();const v=parseNum($("#ans").value);if(isNaN(v))return;answer(Math.abs(v-q.a)<=q.tol+1e-9,v)};try{$("#ans").focus()}catch(e){}}
+  };
+  draw();
+}
+
+/* ---------- drills abiertos ---------- */
+function runOpen(c,it){
+  stop();setTab("drills");const t0=Date.now();let used=0;
+  main.innerHTML=`<button class="back" id="bk">← ${c.n}</button>
+  <p class="eyebrow">${c.n} · ${it.tag}</p>
+  <p class="q">${it.q}</p>
+  <div class="clock" id="cl"><span id="ck">0:00</span><div class="bar"><i id="cb"></i></div><span class="small muted">de ${mmss(c.t)}</span></div>
+  <textarea id="resp" placeholder="Responde en inglés. Si lo dices en voz alta, apunta aquí solo los titulares."></textarea>
+  <button class="btn" id="rv">Ver respuesta modelo</button>
+  <div id="after" hidden style="display:none;flex-direction:column;gap:14px">
+    <div class="model">${it.m}</div>
+    <p class="small muted">${CHK[c.id]}</p>
+    <p class="eyebrow">¿Cómo te ha salido? Sé duro</p>
+    <div class="btns"><button class="btn ghost" data-r="1">Flojo</button><button class="btn ghost" data-r="2">Regular</button><button class="btn ghost" data-r="3">Bien</button></div>
+  </div>`;
+  main.scrollTop=0;$("#bk").onclick=()=>vList(c);
+  tick=setInterval(()=>{const s=(Date.now()-t0)/1000;$("#ck").textContent=mmss(s);$("#cb").style.width=Math.min(100,s/c.t*100)+"%";$("#cl").classList.toggle("over",s>c.t)},250);
+  $("#rv").onclick=()=>{used=Math.round((Date.now()-t0)/1000);stop();$("#rv").hidden=true;$("#resp").readOnly=true;const a=$("#after");a.hidden=false;a.style.display="flex";a.scrollIntoView({block:"start"})};
+  main.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{
+    const r=+b.dataset.r;S.done[it.id]=Math.max(S.done[it.id]||0,r);record(c.id,r/3,it.id,{sec:used,a:$("#resp").value.trim().slice(0,1200)});
+    const nx=nextOf(c.id)||OPEN[c.id][0];
+    result(c,`<h2>${["","Flojo","Regular","Bien"][r]}</h2><p class="muted">Tiempo: ${mmss(used)} de ${mmss(c.t)}${used>c.t?". Te has pasado: la próxima, más corto":""}</p>`,()=>runOpen(c,nx),"Siguiente drill");
+  });
+}
+
+function result(c,html,again,label){
+  stop();const done=S.days[today()]||0;
+  main.innerHTML=`<p class="eyebrow">${c.n} · guardado</p><div class="card">${html}</div>
+  <div class="card"><div class="head"><p class="eyebrow">Objetivo de hoy</p><b>${Math.min(done,S.goal)} de ${S.goal}</b></div><div class="bar"><i style="width:${Math.min(100,done/S.goal*100)}%"></i></div></div>
+  <button class="btn" id="ag">${label||"Otra vez"}</button><button class="btn ghost" id="hm">Volver a Hoy</button>`;
+  main.scrollTop=0;$("#ag").onclick=again;$("#hm").onclick=()=>{try{location.hash="hoy"}catch(e){}show("hoy")};
+}
+
+show(["hoy","drills","teoria"].includes(location.hash.slice(1))?location.hash.slice(1):"hoy");
+initSync();
+</script>
+</body>
+</html>
