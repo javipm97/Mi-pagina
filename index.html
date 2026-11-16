@@ -583,6 +583,14 @@ function renderHoy() {
     const cnt = arr(n.data?.secciones).reduce((a, s) => a + arr(s.items).length, 0);
     h += `<a class="glass tile" href="#noticias"><span class="k">${I.news}Noticias</span><div><div class="v">${cnt}</div><div class="s">historias en ${arr(n.data?.secciones).filter(s => arr(s.items).length).length} secciones</div></div></a>`;
   } else h += `<a class="glass tile" href="#noticias"><span class="k">${I.news}Noticias</span><div class="s">Llega por la mañana</div></a>`;
+  // Acceso directo a Casos, con los drills de hoy si este navegador los tiene guardados
+  let casosTxt = "Tus 3 drills de hoy";
+  try {
+    const c = JSON.parse(localStorage.getItem("casos-v1") || "null"), z = new Date(); z.setMinutes(z.getMinutes() - z.getTimezoneOffset());
+    const hechos = c && c.days ? (c.days[z.toISOString().slice(0, 10)] || 0) : 0, meta = (c && c.goal) || 3;
+    if (c) casosTxt = hechos >= meta ? `Hecho hoy: ${hechos} drills` : `Hoy llevas ${hechos} de ${meta} drills`;
+  } catch (e) {}
+  h += `<a class="glass tile" href="casos/" style="grid-column:1 / -1;min-height:0;flex-direction:row;align-items:center;gap:14px"><span class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Casos</span><span class="s" style="margin:0;text-align:right">${casosTxt} ›</span></a>`;
   h += `</div>`;
   // Titulares 2 y 3
   const rest = arr(n?.data?.destacadas).slice(1, 3);
