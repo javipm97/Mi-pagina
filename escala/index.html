@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#eef0f3">
+<title>Escala</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* Layout: una columna para móvil. Arriba la carta del tema, debajo tu número, luego la mesa y los jugadores. */
+:root {
+  --bg: #eef0f3; --glass: rgba(255,255,255,.74); --glass-strong: rgba(255,255,255,.92); --glass-line: rgba(255,255,255,.9);
+  --hair: rgba(20,24,31,.09); --ink: #111318; --ink-2: #4a4f59; --ink-3: #7c818b; --accent: #0a66d8;
+  --good: #1a7f4b; --good-bg: rgba(52,199,89,.14); --bad: #c0352b; --bad-bg: rgba(255,59,48,.12); --chip: rgba(20,24,31,.06);
+  --shadow: 0 1px 1px rgba(15,20,30,.04), 0 10px 30px -10px rgba(15,20,30,.18);
+  --blob-a: #cfe1ff; --blob-b: #ffe4cc; --blob-c: #d9f2e6; --r: 24px;
+  --card-a: #2b3a8c; --card-b: #6a3fa0; color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #0d0f12; --glass: rgba(38,41,48,.62); --glass-strong: rgba(44,47,55,.92); --glass-line: rgba(255,255,255,.08);
+  --hair: rgba(255,255,255,.09); --ink: #f3f4f6; --ink-2: #b9bdc6; --ink-3: #8a8f99; --accent: #5aa2ff;
+  --good: #6fdc98; --good-bg: rgba(52,199,89,.18); --bad: #ff8a80; --bad-bg: rgba(255,69,58,.18); --chip: rgba(255,255,255,.08);
+  --shadow: 0 10px 30px -12px rgba(0,0,0,.6); --blob-a: #16305a; --blob-b: #3a2516; --blob-c: #123a2a; color-scheme: dark;
+}}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; color: var(--ink); background: var(--bg); min-height: 100vh;
+  font: 17px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased; letter-spacing: -.01em; }
+body::before { content: ""; position: fixed; inset: -20vmax; z-index: -1; pointer-events: none; opacity: .8;
+  background: radial-gradient(40vmax 40vmax at 15% 10%, var(--blob-a), transparent 70%),
+              radial-gradient(35vmax 35vmax at 90% 30%, var(--blob-b), transparent 70%),
+              radial-gradient(40vmax 40vmax at 40% 95%, var(--blob-c), transparent 70%); }
+a { color: var(--accent); }
+button, input { font: inherit; color: inherit; letter-spacing: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 12px; }
+[hidden] { display: none !important; }
+.wrap { max-width: 560px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom)); }
+.glass { background: var(--glass); border: 1px solid var(--glass-line); border-radius: var(--r); box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4); }
+.panel { padding: 18px 18px; margin-top: 14px; }
+.eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin: 0; }
+.large { font-size: 34px; line-height: 1.1; font-weight: 750; letter-spacing: -.025em; margin: 4px 0 0; }
+.muted { color: var(--ink-2); } .faint { color: var(--ink-3); } .small { font-size: 15px; } .tiny { font-size: 13px; }
+.group-title { font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 10px; }
+.field { display: block; margin: 12px 0; }
+.field span { display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 0 0 6px 4px; }
+.field input, .inp { width: 100%; min-height: 50px; border-radius: 14px; border: 1px solid var(--hair); background: var(--glass-strong); padding: 0 16px; font-size: 17px; }
+.code-inp { text-transform: uppercase; letter-spacing: .3em; font-weight: 700; text-align: center; font-size: 22px !important; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 20px; border-radius: 14px;
+  border: 1px solid var(--hair); background: var(--glass-strong); font-weight: 650; cursor: pointer; font-size: 17px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.full { width: 100%; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.sm { min-height: 40px; font-size: 15px; padding: 0 14px; border-radius: 12px; }
+.row { display: flex; gap: 10px; align-items: center; }
+.row > * { flex: 1; }
+.linkish { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 10px 4px; min-height: 44px; font-weight: 600; font-size: 15px; }
+.msg { min-height: 22px; margin: 8px 4px 0; font-size: 15px; color: var(--bad); }
+.or { text-align: center; color: var(--ink-3); font-size: 14px; margin: 16px 0 4px; }
+
+/* Cabecera de sala */
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.code { font-size: 30px; font-weight: 800; letter-spacing: .18em; font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 2px; }
+.lives { display: flex; gap: 4px; justify-content: flex-end; margin-top: 6px; }
+.lives svg { width: 22px; height: 22px; }
+.lives .on { color: var(--bad); } .lives .off { color: var(--ink-3); opacity: .35; }
+.stat { text-align: right; font-size: 13px; color: var(--ink-3); font-weight: 600; }
+
+/* Carta del tema */
+.theme { margin-top: 16px; border-radius: 26px; padding: 22px 20px 20px; color: #fff; box-shadow: var(--shadow);
+  background: linear-gradient(145deg, var(--card-a), var(--card-b)); position: relative; overflow: hidden; }
+.theme::after { content: ""; position: absolute; right: -40px; top: -40px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,.08); }
+.theme .eyebrow { color: rgba(255,255,255,.7); }
+.theme h2 { font-size: 26px; line-height: 1.2; letter-spacing: -.02em; margin: 8px 0 18px; font-weight: 750; position: relative; z-index: 1; }
+.scale { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; position: relative; z-index: 1; }
+.scale .end { font-size: 14px; line-height: 1.25; max-width: 120px; }
+.scale .end b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+.scale .end.r { text-align: right; }
+.scale .bar { height: 6px; border-radius: 3px; background: linear-gradient(90deg, rgba(255,255,255,.25), rgba(255,255,255,.9)); }
+.theme-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+/* Mi número */
+.mine { text-align: center; padding: 20px 18px; }
+.nums { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 6px 0 4px; }
+.num { min-width: 110px; padding: 14px 16px; border-radius: 22px; background: var(--glass-strong); border: 1px solid var(--hair);
+  font-size: 64px; line-height: 1; font-weight: 800; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.num.used { opacity: .3; text-decoration: line-through; font-size: 40px; min-width: 80px; align-self: center; }
+.num.hid { color: transparent; text-shadow: 0 0 22px var(--ink-3); }
+.mine .tools { display: flex; justify-content: center; gap: 4px; }
+.confirm { margin-top: 12px; }
+
+/* Mesa */
+.table { display: flex; flex-wrap: wrap; gap: 8px; }
+.tc { min-width: 62px; padding: 8px 10px 6px; border-radius: 14px; background: var(--glass-strong); border: 1px solid var(--hair); text-align: center; }
+.tc b { display: block; font-size: 24px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tc span { display: block; font-size: 12px; color: var(--ink-3); max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc.error { background: var(--bad-bg); border-color: var(--bad); color: var(--bad); }
+.tc.descarte { opacity: .5; border-style: dashed; }
+.tc.descarte b { text-decoration: line-through; }
+.empty { color: var(--ink-3); font-size: 15px; margin: 0; }
+
+/* Jugadores */
+.players { list-style: none; margin: 0; padding: 0; }
+.players li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--hair); }
+.players li:first-child { border-top: 0; padding-top: 2px; }
+.av { flex: none; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 16px; }
+.pl { flex: 1; min-width: 0; }
+.pl .n { font-weight: 650; }
+.pl .n small { font-weight: 600; color: var(--ink-3); font-size: 12px; margin-left: 6px; }
+.pl .p { font-size: 15px; color: var(--ink-2); font-style: italic; overflow-wrap: anywhere; }
+.pl .p.none { color: var(--ink-3); font-style: normal; }
+.pr { flex: none; text-align: right; font-size: 14px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.pr .big { font-size: 22px; font-weight: 800; color: var(--ink); }
+.pr .x { background: none; border: 0; color: var(--ink-3); cursor: pointer; font-size: 13px; padding: 6px; }
+
+.banner { margin-top: 14px; padding: 14px 16px; border-radius: 18px; font-weight: 600; }
+.banner.bad { background: var(--bad-bg); color: var(--bad); }
+.banner.good { background: var(--good-bg); color: var(--good); }
+.banner p { margin: 4px 0 0; font-weight: 500; color: var(--ink); font-size: 15px; }
+
+.seg { display: inline-flex; background: var(--chip); border-radius: 999px; padding: 3px; }
+.seg button { border: 0; background: none; border-radius: 999px; min-height: 36px; min-width: 44px; padding: 0 14px; font-size: 15px; font-weight: 650; color: var(--ink-2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--glass-strong); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.rules ol { margin: 6px 0 0; padding-left: 20px; } .rules li { margin: 6px 0; font-size: 15px; color: var(--ink-2); }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--ink); color: var(--bg);
+  padding: 10px 18px; border-radius: 999px; font-size: 15px; font-weight: 600; z-index: 40; max-width: calc(100% - 32px); text-align: center; }
+.home { display: inline-block; margin-top: 22px; font-size: 14px; color: var(--ink-3); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Entrada -->
+  <section id="vEntrada" hidden>
+    <p class="eyebrow">Juego para grupos</p>
+    <h1 class="large">Escala</h1>
+    <p class="muted" style="margin:10px 0 0">Cada uno recibe un número secreto del 1 al 100. Con el tema de la carta, describid vuestro número sin decirlo y bajad las cartas en orden.</p>
+    <div class="glass panel">
+      <form id="fEntrada" novalidate>
+        <label class="field"><span>Tu nombre</span><input id="iNombre" maxlength="20" autocomplete="nickname" required></label>
+        <div id="boxUnirse" hidden>
+          <label class="field"><span>Código de la sala</span><input id="iCodigo" class="code-inp" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
+        </div>
+        <p id="mEntrada" class="msg" role="alert"></p>
+        <button class="btn primary full" type="submit" id="bEntrar">Crear sala</button>
+      </form>
+      <p class="or" id="orTxt">¿Te han pasado un código?</p>
+      <button class="btn full" type="button" id="bCambiarModo">Unirme a una sala</button>
+    </div>
+    <details class="glass panel rules">
+      <summary style="cursor:pointer;font-weight:650">Cómo se juega</summary>
+      <ol>
+        <li>Quien crea la sala comparte el enlace. Cada uno entra con su nombre.</li>
+        <li>Al empezar la ronda, todos veis la misma carta con un tema (por ejemplo, «lo fuerte que es un animal») y cada uno recibe su número en secreto.</li>
+        <li>Describe tu número con algo del tema, sin decirlo: con un 95 dirías «un oso»; con un 4, «una hormiga». Si alguien juega a distancia, puede escribir su pista.</li>
+        <li>Cuando creas que tu número es el más bajo de los que quedan, baja tu carta.</li>
+        <li>Si alguien tenía un número más bajo, perdéis una vida y esas cartas se descartan. Tenéis 3 vidas para superar el máximo de rondas.</li>
+      </ol>
+    </details>
+  </section>
+
+  <!-- Sala -->
+  <section id="vSala" hidden>
+    <div class="top">
+      <div>
+        <p class="eyebrow">Sala</p>
+        <div class="code" id="tCodigo"></div>
+        <button class="linkish" type="button" id="bCompartir" style="padding-left:0">Invitar a alguien</button>
+      </div>
+      <div>
+        <p class="stat" id="tRonda"></p>
+        <div class="lives" id="tVidas" aria-label=""></div>
+      </div>
+    </div>
+
+    <div id="bannerBox"></div>
+
+    <div class="theme" id="cTema" hidden>
+      <p class="eyebrow" id="tTemaEye">Tema</p>
+      <h2 id="tTema"></h2>
+      <div class="scale">
+        <div class="end"><b>1</b><span id="tBajo"></span></div>
+        <div class="bar" aria-hidden="true"></div>
+        <div class="end r"><b>100</b><span id="tAlto"></span></div>
+      </div>
+    </div>
+
+    <!-- Controles del anfitrión antes de repartir -->
+    <div id="boxAnfitrion" hidden>
+      <div class="theme-tools">
+        <button class="btn sm" type="button" id="bOtroTema">Otro tema</button>
+        <button class="btn sm" type="button" id="bMiTema">Escribir el mío</button>
+      </div>
+      <form id="fMiTema" class="glass panel" hidden novalidate>
+        <label class="field"><span>Tema</span><input id="iTemaTxt" maxlength="120" placeholder="Lo bueno que es un plan de domingo"></label>
+        <div class="row">
+          <label class="field"><span>1 =</span><input id="iTemaBajo" maxlength="40" placeholder="Un rollo"></label>
+          <label class="field"><span>100 =</span><input id="iTemaAlto" maxlength="40" placeholder="El mejor"></label>
+        </div>
+        <button class="btn full" type="submit">Usar este tema</button>
+      </form>
+      <div class="glass panel">
+        <div class="row" style="justify-content:space-between">
+          <span class="small muted" style="flex:none">Cartas por persona</span>
+          <div class="seg" id="segCartas" role="group" aria-label="Cartas por persona" style="flex:none">
+            <button type="button" data-c="1" aria-pressed="true">1</button><button type="button" data-c="2" aria-pressed="false">2</button><button type="button" data-c="3" aria-pressed="false">3</button>
+          </div>
+        </div>
+        <button class="btn primary full" type="button" id="bEmpezar" style="margin-top:14px">Repartir números</button>
+        <p class="msg" id="mAnfitrion" role="alert"></p>
+      </div>
+    </div>
+    <p id="tEsperando" class="glass panel muted" hidden></p>
+
+    <!-- Mi número -->
+    <div class="glass panel mine" id="boxMio" hidden>
+      <p class="group-title" style="margin:0" id="tMioTit">Tu número</p>
+      <div class="nums" id="tNums"></div>
+      <div class="tools"><button class="linkish" type="button" id="bOcultar">Ocultar</button></div>
+      <label class="field" style="text-align:left"><span>Tu pista (opcional, la ven todos)</span>
+        <input id="iPista" class="inp" maxlength="60" placeholder="Un oso pardo" enterkeyhint="done"></label>
+      <button class="btn primary full" type="button" id="bJugar">Bajar mi carta</button>
+      <p class="msg" id="mJugar" role="alert"></p>
+    </div>
+    <div id="boxCambiarTema" hidden style="margin-top:10px"><button class="btn sm" type="button" id="bCambiarTema">Cambiar tema (aún no se ha bajado nada)</button></div>
+
+    <!-- Mesa -->
+    <div class="glass panel" id="boxMesa" hidden>
+      <p class="group-title">Mesa</p>
+      <div class="table" id="tMesa"></div>
+    </div>
+
+    <!-- Jugadores -->
+    <div class="glass panel">
+      <p class="group-title" id="tJugTit">Jugadores</p>
+      <ul class="players" id="tJugadores"></ul>
+    </div>
+
+    <p style="text-align:center"><button class="linkish" type="button" id="bSalir">Salir de la sala</button></p>
+  </section>
+
+  <p id="vCargando" class="faint" style="text-align:center;padding:60px 0" role="status">Cargando…</p>
+  <p style="text-align:center"><a class="home" href="../">Mi página</a></p>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+"use strict";
+const SUPABASE_URL = "https://mwsapcjzubisdszmwswp.supabase.co";
+const SUPABASE_KEY = "sb_publishable_oe1TNOb-Y-Lu3jYI8wr5XA_nLDluFOf"; // clave pública: los datos solo se tocan con las funciones escala_*
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// ---------- Temas: [tema, qué es 1, qué es 100] ----------
+const TEMAS = [
+  ["Lo rica que está una comida", "Incomible", "Un manjar"],
+  ["Lo fuerte que es un animal", "Debilucho", "Imbatible"],
+  ["Lo peligroso que es un animal", "Inofensivo", "Mortal"],
+  ["Lo famoso que es alguien", "Nadie lo conoce", "Lo conoce todo el mundo"],
+  ["Lo útil que es un objeto en una isla desierta", "Inútil", "Te salva la vida"],
+  ["Lo caro que es un regalo", "Una chuche", "Una locura"],
+  ["Lo romántico que es un plan de cita", "Cero romántico", "De película"],
+  ["Lo vergonzoso que es algo que te pase en público", "Ni te inmutas", "Tierra, trágame"],
+  ["Lo popular que es un deporte", "No lo ve nadie", "Lo ve todo el mundo"],
+  ["Lo duro que es un trabajo", "Un chollo", "Durísimo"],
+  ["Lo bien pagado que está un trabajo", "Una miseria", "Una fortuna"],
+  ["Lo divertido que es un plan de sábado", "Un rollo", "El mejor plan"],
+  ["Lo pesada que es una tarea de casa", "Ni se nota", "La odias"],
+  ["Lo grande que es algo", "Diminuto", "Gigantesco"],
+  ["Lo pesado que es un objeto", "Una pluma", "Imposible de mover"],
+  ["Lo rápido que es un animal o vehículo", "Lentísimo", "Rapidísimo"],
+  ["Lo terrorífica que es una situación", "Ni un susto", "Pesadilla"],
+  ["Lo buena que es una película", "Malísima", "Obra maestra"],
+  ["Lo pegadiza que es una canción", "Se olvida al instante", "No sale de la cabeza"],
+  ["Lo bonito que es un lugar del mundo", "Feo", "Espectacular"],
+  ["Lo caro que es vivir en una ciudad", "Baratísimo", "Imposible"],
+  ["Lo útil que es un invento", "Inútil", "Cambió el mundo"],
+  ["Lo que dura algo", "Un instante", "Para siempre"],
+  ["Lo caliente que está algo", "Helado", "Abrasador"],
+  ["Lo sano que es un alimento", "Veneno", "Supersano"],
+  ["Lo picante que es algo", "Nada", "Fuego"],
+  ["Lo dulce que es algo", "Nada dulce", "Empalagoso"],
+  ["Lo raro que es un hobby", "Normalísimo", "Rarísimo"],
+  ["Lo peligroso que es un deporte", "Sin riesgo", "Te juegas la vida"],
+  ["Lo cansado que es un ejercicio", "Ni sudas", "Acabas muerto"],
+  ["Lo elegante que es una prenda de ropa", "Cutre", "De gala"],
+  ["Lo cómodo que es un sitio para dormir", "Una tortura", "Una nube"],
+  ["Lo que te molesta una manía de otra persona", "Te da igual", "No lo soportas"],
+  ["Lo buena idea que es algo en una primera cita", "Error total", "Acierto seguro"],
+  ["Lo fácil que es aprender algo", "Facilísimo", "Imposible"],
+  ["Lo típico de España que es algo", "Nada", "Lo más español"],
+  ["Lo navideño que es algo", "Nada", "Pura Navidad"],
+  ["Lo veraniego que es algo", "Nada", "Puro verano"],
+  ["Lo infantil que es algo", "De adultos", "De niños pequeños"],
+  ["Lo de abuelo que es algo", "Muy joven", "Muy de abuelo"],
+  ["Lo lujoso que es algo", "Humilde", "Lujo total"],
+  ["Lo ruidoso que es algo", "Silencio", "Ensordecedor"],
+  ["Lo bien que huele algo", "Apesta", "Huele de maravilla"],
+  ["Lo sucio que es un lugar", "Impecable", "Asqueroso"],
+  ["Lo listo que es un animal", "Poco listo", "Un genio"],
+  ["Lo adorable que es un animal", "Nada", "Te lo comes a besos"],
+  ["Lo asqueroso que es un bicho", "Bonito", "Repugnante"],
+  ["Lo bien que queda algo en una pizza", "Un crimen", "Imprescindible"],
+  ["Lo temible que es un villano de ficción", "Un payaso", "Aterrador"],
+  ["Lo poderoso que es un personaje de ficción", "Un mortal", "Invencible"],
+  ["Lo heroico que es un acto", "Nada", "Héroe nacional"],
+  ["Lo arriesgada que es una decisión", "Segura", "Una locura"],
+  ["Lo impresionante que es un logro", "Normalito", "Histórico"],
+  ["Lo estresante que es una situación", "Tranquilo", "Al borde del infarto"],
+  ["Lo relajante que es una actividad", "Estresante", "Paz total"],
+  ["Lo incómoda que es una situación", "Cero incómoda", "Insoportable"],
+  ["Lo importante que es algo para ser feliz", "Da igual", "Esencial"],
+  ["Lo difícil de dibujar que es algo", "Facilísimo", "Imposible"],
+  ["Lo útil que es una app del móvil", "La borrarías", "No vives sin ella"],
+  ["Lo adictivo que es algo", "Nada", "Engancha muchísimo"],
+  ["Lo bueno que es un superpoder", "Inútil", "El mejor"],
+  ["Lo común que es un nombre de persona", "Rarísimo", "Hay uno en cada clase"],
+  ["Lo bueno que es un nombre para un perro", "Horrible", "Perfecto"],
+  ["Las ganas que tendrías de vivir en un sitio", "Ninguna", "Mañana mismo"],
+  ["Lo frío que es un lugar", "Tropical", "Polar"],
+  ["Lo antiguo que es algo", "De hoy", "Prehistórico"],
+  ["Lo moderno que es un aparato", "Del siglo pasado", "Del futuro"],
+  ["Lo resistente que es un material", "Se rompe solo", "Indestructible"],
+  ["Lo blando que es algo", "Durísimo", "Blandísimo"],
+  ["Lo alto que es algo", "A ras del suelo", "Hasta las nubes"],
+  ["Lo rápido que se estropea algo", "Dura años", "Se estropea enseguida"],
+  ["Lo épico que es un momento deportivo", "Olvidable", "Historia del deporte"],
+  ["Lo buen regalo que es algo", "Lo tirarías", "Lo guardas toda la vida"],
+  ["Lo bien que sienta algo después de un día duro", "Nada", "Gloria bendita"],
+  ["Lo sospechoso que es un comportamiento", "Normal", "Llamad a la policía"],
+  ["Lo mal que lo pasarías en un trabajo", "Encantado", "Un infierno"],
+  ["Lo útil que es algo en la cocina", "Estorba", "Imprescindible"],
+  ["Lo exótico que es un viaje", "A la vuelta de la esquina", "Otro planeta"],
+  ["Lo que te costaría dejar algo para siempre", "Nada", "Imposible"],
+  ["Lo inolvidable que es un momento de la vida", "Ni te acuerdas", "No se olvida nunca"],
+  ["Lo atrevido que es un look", "Discreto", "Muy atrevido"],
+  ["Lo difícil que es un juego", "Para niños", "Para expertos"],
+  ["Lo que pagarías por algo", "Ni gratis", "Lo que fuera"],
+  ["Lo mítico que es un dulce de la infancia", "Nadie lo recuerda", "Leyenda"],
+  ["Lo bien que se baila una canción", "Imposible", "Todo el mundo a la pista"],
+  ["Lo indispensable que es algo en una maleta", "Sobra", "Sin esto no te vas"],
+  ["Lo raro que es comer algo", "Normal", "Rarísimo"],
+  ["Lo temprano que es una hora para levantarse", "Mediodía", "De madrugada"],
+  ["Lo bueno que es un plan para una boda", "Ni de broma", "Idea genial"],
+  ["Lo mucho que impone una profesión", "Nada", "Muchísimo respeto"],
+  ["Lo pijo que es algo", "Nada", "Pijísimo"],
+  ["Lo de película de miedo que es un sitio", "Acogedor", "No entras ni loco"],
+  ["Lo importante que es un objeto en tu día a día", "Ni lo usas", "Lo usas a todas horas"],
+  ["Lo divertido que es un juego de mesa", "Aburrido", "Vicio total"],
+  ["Lo caro que es un capricho", "Baratísimo", "Carísimo"],
+  ["Lo bonito que es un animal", "Feo", "Precioso"],
+  ["Lo fuerte que es un sabor", "Suave", "Intensísimo"],
+  ["Lo popular que es una comida", "No la come nadie", "La come todo el mundo"],
+  ["Lo mucho que se tarda en hacer algo", "Segundos", "Años"],
+  ["Lo útil que es una habilidad en la vida", "Inútil", "Imprescindible"]
+];
+
+// ---------- Estado local ----------
+const LS = { token: "escala-token", nombre: "escala-nombre", sala: "escala-sala", oculto: "escala-oculto" };
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
+let token = lsGet(LS.token);
+if (!token) { token = (crypto.randomUUID ? crypto.randomUUID() : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === "x" ? r : (r & 3 | 8)).toString(16); })); lsSet(LS.token, token); }
+
+let sala = null, st = null, lastJson = "", timer = null, modoUnirse = false, cartasSel = 1, ocultar = lsGet(LS.oculto) === "1";
+let temaElegido = null, temasUsados = [], confirmando = false, confirmT = null, ultimoErrorVisto = null;
+
+const params = new URLSearchParams(location.search);
+const salaUrl = (params.get("sala") || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
+
+function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 2600); }
+function errTxt(e) { const m = (e && (e.message || e.details)) || ""; return m && !/fetch|network/i.test(m) ? m : "No hay conexión. Prueba otra vez."; }
+async function rpc(fn, args) { const { data, error } = await sb.rpc(fn, args); if (error) throw error; return data; }
+function linkSala(c) { return location.origin + location.pathname + "?sala=" + c; }
+function color(nombre) { let h = 0; for (const ch of nombre) h = (h * 31 + ch.charCodeAt(0)) % 360; return `hsl(${h} 55% 45%)`; }
+function temaAzar() {
+  if (temasUsados.length >= TEMAS.length - 1) temasUsados = [];
+  let i; do { i = Math.floor(Math.random() * TEMAS.length); } while (temasUsados.includes(i));
+  temasUsados.push(i); const t = TEMAS[i]; return { texto: t[0], bajo: t[1], alto: t[2] };
+}
+
+// ---------- Entrada ----------
+function verEntrada() {
+  $("#vCargando").hidden = true; $("#vSala").hidden = true; $("#vEntrada").hidden = false;
+  $("#iNombre").value = lsGet(LS.nombre) || "";
+  if (salaUrl) { modoUnirse = true; $("#iCodigo").value = salaUrl; }
+  pintarModo();
+  setTimeout(() => (($("#iNombre").value ? (modoUnirse && !$("#iCodigo").value ? $("#iCodigo") : $("#bEntrar")) : $("#iNombre"))).focus(), 50);
+}
+function pintarModo() {
+  $("#boxUnirse").hidden = !modoUnirse;
+  $("#bEntrar").textContent = modoUnirse ? "Entrar en la sala" : "Crear sala";
+  $("#orTxt").textContent = modoUnirse ? "¿Quieres montar tu propia partida?" : "¿Te han pasado un código?";
+  $("#bCambiarModo").textContent = modoUnirse ? "Crear una sala nueva" : "Unirme a una sala";
+  $("#mEntrada").textContent = "";
+}
+$("#bCambiarModo").onclick = () => { modoUnirse = !modoUnirse; pintarModo(); };
+$("#fEntrada").onsubmit = async ev => {
+  ev.preventDefault();
+  const nombre = $("#iNombre").value.trim(), codigo = $("#iCodigo").value.trim().toUpperCase();
+  if (!nombre) { $("#mEntrada").textContent = "Escribe tu nombre."; $("#iNombre").focus(); return; }
+  if (modoUnirse && codigo.length !== 4) { $("#mEntrada").textContent = "El código tiene 4 letras."; $("#iCodigo").focus(); return; }
+  $("#bEntrar").disabled = true; $("#mEntrada").textContent = "";
+  try {
+    let c = codigo;
+    if (modoUnirse) await rpc("escala_unirse", { p_codigo: codigo, p_token: token, p_nombre: nombre });
+    else c = await rpc("escala_crear", { p_token: token, p_nombre: nombre });
+    lsSet(LS.nombre, nombre); entrarSala(c);
+  } catch (e) { $("#mEntrada").textContent = errTxt(e); }
+  finally { $("#bEntrar").disabled = false; }
+};
+
+// ---------- Sala ----------
+function entrarSala(c) {
+  sala = c; lsSet(LS.sala, c); lastJson = ""; st = null;
+  history.replaceState(null, "", "?sala=" + c);
+  $("#vEntrada").hidden = true; $("#vCargando").hidden = false;
+  if (!temaElegido) temaElegido = temaAzar();
+  refrescar(); clearInterval(timer); timer = setInterval(() => { if (!document.hidden) refrescar(); }, 1500);
+}
+async function refrescar() {
+  if (!sala) return;
+  try {
+    const s = await rpc("escala_estado", { p_codigo: sala, p_token: token });
+    if (!s.dentro) { salirLocal("Ya no estás en la sala."); return; }
+    const j = JSON.stringify(s);
+    if (j !== lastJson) { lastJson = j; st = s; pintar(); }
+  } catch (e) {
+    if (/no existe|caducado/i.test(e.message || "")) salirLocal("Esa sala ya no existe.");
+  }
+}
+function salirLocal(msg) {
+  clearInterval(timer); sala = null; st = null; lsSet(LS.sala, null);
+  history.replaceState(null, "", location.pathname); modoUnirse = false;
+  verEntrada(); if (msg) toast(msg);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refrescar(); });
+
+const heart = on => `<svg viewBox="0 0 24 24" class="${on ? "on" : "off"}" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.5h2c.7-1.3 2.2-2.5 4.3-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>`;
+
+function pintar() {
+  const s = st, yo = s.yo, host = yo.anfitrion, jugando = s.estado === "jugando", fin = s.estado === "fin_ronda" || s.estado === "fin_partida";
+  $("#vCargando").hidden = true; $("#vEntrada").hidden = true; $("#vSala").hidden = false;
+  $("#tCodigo").textContent = s.codigo;
+  $("#tRonda").textContent = s.ronda ? `Ronda ${s.ronda} · ${s.superadas} superada${s.superadas === 1 ? "" : "s"}` : "Sin empezar";
+  $("#tVidas").innerHTML = [0, 1, 2].map(i => heart(i < s.vidas)).join("");
+  $("#tVidas").setAttribute("aria-label", `${s.vidas} vidas`);
+
+  // Avisos
+  let ban = "";
+  if (s.ultimo_error && jugando) {
+    const e = s.ultimo_error, b = e.bajas.map(x => `${esc(x.nombre)} tenía el ${x.n}`).join(", ");
+    ban = `<div class="banner bad">¡Fallo! ${esc(e.nombre)} bajó el ${e.n}<p>${b}. Perdéis una vida; esas cartas se descartan.</p></div>`;
+    const key = JSON.stringify(e);
+    if (ultimoErrorVisto !== key) { ultimoErrorVisto = key; if (navigator.vibrate) navigator.vibrate(200); }
+  } else if (s.estado === "fin_ronda") {
+    const fallos = s.mesa.filter(m => m.tipo === "error").length;
+    ban = `<div class="banner good">${fallos ? "Ronda superada" : "¡Ronda perfecta!"}<p>${fallos ? `Con ${fallos} fallo${fallos > 1 ? "s" : ""}. ` : ""}Os quedan ${s.vidas} vida${s.vidas === 1 ? "" : "s"}.${host ? " Elige tema para la siguiente." : ""}</p></div>`;
+  } else if (s.estado === "fin_partida") {
+    ban = `<div class="banner bad">Sin vidas: fin de la partida<p>Habéis superado ${s.superadas} ronda${s.superadas === 1 ? "" : "s"}.${host ? " Puedes empezar una partida nueva." : ""}</p></div>`;
+  }
+  $("#bannerBox").innerHTML = ban;
+
+  // Tema: en juego o al final se ve el de la ronda; antes de repartir, el anfitrión ve el que va a usar
+  const preparando = !jugando && host;
+  const tema = jugando || (fin && !host) ? s.tema : (preparando ? temaElegido : null);
+  $("#cTema").hidden = !tema;
+  if (tema) {
+    $("#tTemaEye").textContent = preparando ? "Tema de la próxima ronda" : `Tema · ronda ${s.ronda}`;
+    $("#tTema").textContent = tema.texto; $("#tBajo").textContent = tema.bajo || ""; $("#tAlto").textContent = tema.alto || "";
+  }
+  $("#boxAnfitrion").hidden = !preparando;
+  $("#bEmpezar").textContent = s.estado === "fin_partida" ? "Nueva partida" : (s.ronda ? "Siguiente ronda" : "Repartir números");
+  $("#segCartas").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.c === cartasSel)));
+  const anfitrion = s.jugadores.find(j => j.anfitrion);
+  $("#tEsperando").hidden = jugando || host;
+  $("#tEsperando").textContent = `Esperando a que ${anfitrion ? anfitrion.nombre : "el anfitrión"} reparta${s.ronda ? " la siguiente ronda" : ""}. Comparte el código ${s.codigo} con quien falte.`;
+
+  // Mi número
+  const tengo = jugando && yo.numeros.length > 0;
+  $("#boxMio").hidden = !tengo;
+  if (jugando && !yo.numeros.length) { $("#tEsperando").hidden = false; $("#tEsperando").textContent = "Has entrado con la ronda empezada. Tendrás número en la siguiente."; }
+  if (tengo) {
+    const rest = yo.restantes;
+    $("#tMioTit").textContent = yo.numeros.length > 1 ? "Tus números" : "Tu número";
+    $("#tNums").innerHTML = yo.numeros.map(n => rest.includes(n) ? `<div class="num${ocultar ? " hid" : ""}">${n}</div>` : `<div class="num used">${n}</div>`).join("");
+    $("#bOcultar").textContent = ocultar ? "Mostrar" : "Ocultar";
+    if (document.activeElement !== $("#iPista")) $("#iPista").value = yo.pista || "";
+    $("#bJugar").disabled = !rest.length;
+    if (!rest.length) { resetConfirm(); $("#bJugar").textContent = "Ya has bajado todo"; }
+    else if (!confirmando) $("#bJugar").textContent = rest.length > 1 ? `Bajar mi carta más baja` : "Bajar mi carta";
+  } else resetConfirm();
+  $("#boxCambiarTema").hidden = !(host && jugando && s.mesa.length === 0);
+
+  // Mesa
+  $("#boxMesa").hidden = !(jugando || fin) || !s.ronda;
+  $("#tMesa").innerHTML = s.mesa.length
+    ? s.mesa.map(m => `<div class="tc ${m.tipo}"><b>${m.n}</b><span>${esc(m.nombre)}</span></div>`).join("")
+    : `<p class="empty">Aún no se ha bajado ninguna carta. Hablad y que empiece quien crea tener el número más bajo.</p>`;
+
+  // Jugadores
+  $("#tJugTit").textContent = `Jugadores (${s.jugadores.length})`;
+  $("#tJugadores").innerHTML = s.jugadores.map(j => {
+    let derecha = "";
+    if (fin && j.numeros && j.numeros.length) derecha = `<span class="big">${j.numeros.join(" · ")}</span>`;
+    else if (jugando && j.repartidas) derecha = j.quedan ? `${j.quedan} carta${j.quedan > 1 ? "s" : ""}` : "Hecho";
+    if (host && !j.yo && !jugando) derecha += ` <button class="x" type="button" data-quitar="${esc(j.nombre)}" aria-label="Quitar a ${esc(j.nombre)}">Quitar</button>`;
+    const pista = j.pista ? `<div class="p">«${esc(j.pista)}»</div>` : (jugando && j.quedan ? `<div class="p none">Sin pista escrita</div>` : "");
+    return `<li><span class="av" style="background:${color(j.nombre)}">${esc(j.nombre.slice(0, 1).toUpperCase())}</span>
+      <div class="pl"><div class="n">${esc(j.nombre)}${j.yo ? "<small>tú</small>" : ""}${j.anfitrion ? "<small>anfitrión</small>" : ""}</div>${pista}</div>
+      <div class="pr">${derecha}</div></li>`;
+  }).join("");
+}
+
+// ---------- Acciones ----------
+$("#bCompartir").onclick = async () => {
+  const url = linkSala(sala), txt = `Únete a mi partida de Escala. Código: ${sala}`;
+  if (navigator.share) { try { await navigator.share({ title: "Escala", text: txt, url }); return; } catch (e) { if (e.name === "AbortError") return; } }
+  try { await navigator.clipboard.writeText(url); toast("Enlace copiado"); } catch (e) { prompt("Copia este enlace:", url); }
+};
+$("#bOtroTema").onclick = () => { temaElegido = temaAzar(); $("#fMiTema").hidden = true; pintar(); };
+$("#bMiTema").onclick = () => { $("#fMiTema").hidden = !$("#fMiTema").hidden; if (!$("#fMiTema").hidden) $("#iTemaTxt").focus(); };
+$("#fMiTema").onsubmit = ev => {
+  ev.preventDefault(); const t = $("#iTemaTxt").value.trim();
+  if (!t) { $("#iTemaTxt").focus(); return; }
+  temaElegido = { texto: t, bajo: $("#iTemaBajo").value.trim(), alto: $("#iTemaAlto").value.trim() };
+  $("#fMiTema").hidden = true; pintar();
+};
+$("#segCartas").onclick = ev => { const b = ev.target.closest("button[data-c]"); if (!b) return; cartasSel = +b.dataset.c; pintar(); };
+$("#bEmpezar").onclick = async () => {
+  $("#bEmpezar").disabled = true; $("#mAnfitrion").textContent = "";
+  try { await rpc("escala_empezar", { p_codigo: sala, p_token: token, p_tema: temaElegido, p_cartas: cartasSel }); temaElegido = temaAzar(); await refrescar(); }
+  catch (e) { $("#mAnfitrion").textContent = errTxt(e); }
+  finally { $("#bEmpezar").disabled = false; }
+};
+$("#bCambiarTema").onclick = async () => {
+  try { await rpc("escala_cambiar_tema", { p_codigo: sala, p_token: token, p_tema: temaAzar() }); await refrescar(); }
+  catch (e) { toast(errTxt(e)); }
+};
+$("#bOcultar").onclick = () => { ocultar = !ocultar; lsSet(LS.oculto, ocultar ? "1" : "0"); pintar(); };
+
+function resetConfirm() { confirmando = false; clearTimeout(confirmT); $("#bJugar").classList.remove("danger"); $("#bJugar").classList.add("primary"); }
+$("#bJugar").onclick = async () => {
+  const rest = st?.yo?.restantes || [];
+  if (!rest.length) return;
+  if (!confirmando) {
+    confirmando = true; $("#bJugar").classList.remove("primary"); $("#bJugar").classList.add("danger");
+    $("#bJugar").textContent = `¿Seguro? Bajar el ${rest[0]}`;
+    confirmT = setTimeout(() => { resetConfirm(); if (st) pintar(); }, 4000);
+    return;
+  }
+  resetConfirm(); $("#bJugar").disabled = true; $("#mJugar").textContent = "";
+  try { await rpc("escala_jugar", { p_codigo: sala, p_token: token }); await refrescar(); }
+  catch (e) { $("#mJugar").textContent = errTxt(e); }
+  finally { $("#bJugar").disabled = false; if (st) pintar(); }
+};
+let pistaT = null;
+async function guardarPista() {
+  clearTimeout(pistaT);
+  try { await rpc("escala_pista", { p_codigo: sala, p_token: token, p_texto: $("#iPista").value }); refrescar(); } catch (e) { toast(errTxt(e)); }
+}
+$("#iPista").addEventListener("input", () => { clearTimeout(pistaT); pistaT = setTimeout(guardarPista, 700); });
+$("#iPista").addEventListener("keydown", ev => { if (ev.key === "Enter") { ev.preventDefault(); $("#iPista").blur(); } });
+$("#iPista").addEventListener("blur", guardarPista);
+$("#tJugadores").onclick = async ev => {
+  const b = ev.target.closest("[data-quitar]"); if (!b) return;
+  if (!confirm(`¿Quitar a ${b.dataset.quitar} de la sala?`)) return;
+  try { await rpc("escala_quitar", { p_codigo: sala, p_token: token, p_nombre: b.dataset.quitar }); refrescar(); } catch (e) { toast(errTxt(e)); }
+};
+$("#bSalir").onclick = async () => {
+  if (!confirm("¿Salir de la sala?")) return;
+  try { await rpc("escala_salir", { p_codigo: sala, p_token: token }); } catch (e) {}
+  salirLocal();
+};
+
+// ---------- Arranque ----------
+(async function () {
+  const guardada = lsGet(LS.sala);
+  const c = salaUrl || guardada;
+  if (c) {
+    try {
+      const s = await rpc("escala_estado", { p_codigo: c, p_token: token });
+      if (s.dentro) { entrarSala(s.codigo); return; }
+    } catch (e) { if (!salaUrl) lsSet(LS.sala, null); }
+  }
+  verEntrada();
+})();
+</script>
+</body>
+</html>

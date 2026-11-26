@@ -78,3 +78,11 @@ Drills diarios para entrevistas de consultoría: cálculo mental, márgenes y P&
 - **`casos/index.html`** con la aplicación y **`casos/data-*.js`** con el banco de 330 drills abiertos, ordenados en tres niveles. Los de cálculo, márgenes, tablas y gráficos se generan con números nuevos cada vez.
 - **Datos:** tabla `casos_progreso` (una sola fila, `id = 'javi'`, con el progreso en `data`). Solo la lee y escribe la cuenta `javipm.97@gmail.com`. Usa la misma sesión que la página principal; sin sesión funciona igual pero guarda solo en el navegador.
 - **Qué guarda `data`:** `days` (drills por día), `stats` (número y acierto por categoría), `done` (nota de cada drill abierto: 1 flojo, 2 regular, 3 bien), `plan` (los 3 drills de hoy) y `log` (las últimas 400 sesiones, con los fallos de cálculo y, en las 60 más recientes, el texto de la respuesta). Claude lee esta fila para seguir el progreso.
+
+## Escala (`/escala/`)
+
+Juego para grupos, parecido a ito: cada uno recibe en secreto un número del 1 al 100, todos ven la misma carta de tema y hay que bajar las cartas en orden sin decir los números. 3 vidas por partida. No hace falta cuenta: se entra con nombre y el código de 4 letras de la sala (o el enlace `escala/?sala=ABCD`). Tiene acceso directo en la vista «Hoy».
+
+- **Un único `escala/index.html`**, con la lista de temas dentro. Se actualiza cada 1,5 s preguntando a la base de datos.
+- **Datos:** tablas `escala_salas` y `escala_jugadores`. Nadie las lee directamente: todo pasa por las funciones `escala_crear`, `escala_unirse`, `escala_estado`, `escala_empezar`, `escala_cambiar_tema`, `escala_jugar`, `escala_pista`, `escala_quitar` y `escala_salir`. Cada navegador se identifica con un token aleatorio guardado en `localStorage`; los números de los demás solo se ven al acabar la ronda.
+- Las salas sin actividad en 2 días se borran al crear una nueva. Máximo 12 jugadores por sala.
