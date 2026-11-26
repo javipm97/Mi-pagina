@@ -163,14 +163,14 @@ tr.done .tt{text-decoration:line-through}
   "use strict";
   const SUPABASE_URL="https://mwsapcjzubisdszmwswp.supabase.co";
   const SUPABASE_KEY="sb_publishable_oe1TNOb-Y-Lu3jYI8wr5XA_nLDluFOf";
-  const MESES=[["mar","Mar"],["may","May"],["jun","Jun"],["sep","Sep"],["oct","Oct"]];
+  const MESES=[["alta","Alta"],["media","Media"],["baja","Baja"]];
   const INV=[120,130,140];
   const ESTADOS=["Por contactar","Correo listo","Correo enviado","Han respondido","Visita prevista","Visitada","Favorita","Descartada"];
   const S={fincas:[],decisiones:[],tareas:[],config:{},updated:null,rol:"lector",pw:""};
   const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}};
   const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
   const YO={w:ls("boda-yo","")};
-  const UI={tab:ls("boda-tab","fincas"),vista:ls("boda-vista","mes"),inv:Number(ls("boda-inv","130")),mes:ls("boda-mes","mar"),orden:ls("boda-orden","precio"),ocultar:ls("boda-ocultar","1")==="1",abierta:""};
+  const UI={tab:ls("boda-tab","fincas"),vista:ls("boda-vista","mes"),inv:Number(ls("boda-inv","130")),mes:(v=>["alta","media","baja"].includes(v)?v:"alta")(ls("boda-mes","alta")),orden:ls("boda-orden","precio"),ocultar:ls("boda-ocultar","1")==="1",abierta:""};
   if(!INV.includes(UI.inv)) UI.inv=130;
 
   const $=s=>document.querySelector(s);
@@ -271,7 +271,7 @@ tr.done .tt{text-decoration:line-through}
   }
   function claveOrden(f){
     if(UI.orden==="votos") return -score(f);
-    const t=UI.vista==="mes"?total(f,"mar",UI.inv)||MESES.map(([m])=>total(f,m,UI.inv)).find(Boolean):total(f,UI.mes,UI.inv);
+    const t=UI.vista==="mes"?total(f,"alta",UI.inv)||MESES.map(([m])=>total(f,m,UI.inv)).find(Boolean):total(f,UI.mes,UI.inv);
     return t?t.v:1e9;
   }
   function viewFincas(){
@@ -280,13 +280,13 @@ tr.done .tt{text-decoration:line-through}
     list.sort((a,b)=>claveOrden(a)-claveOrden(b)||(a.orden||99)-(b.orden||99));
     const seg=(arr,cur,act)=>`<span class="seg">${arr.map(([v,l])=>`<button type="button" data-act="${act}" data-v="${v}" aria-pressed="${String(v)===String(cur)}">${l}</button>`).join("")}</span>`;
     const bar=`<div class="bar">
-      ${seg([["mes","Por mes"],["inv","Por invitados"]],UI.vista,"vista")}
-      ${UI.vista==="mes"?`<span class="lbl">Invitados</span>${seg(INV.map(n=>[n,n]),UI.inv,"inv")}`:`<span class="lbl">Mes</span>${seg(MESES,UI.mes,"mes")}`}
+      ${seg([["mes","Por temporada"],["inv","Por invitados"]],UI.vista,"vista")}
+      ${UI.vista==="mes"?`<span class="lbl">Invitados</span>${seg(INV.map(n=>[n,n]),UI.inv,"inv")}`:`<span class="lbl">Temporada</span>${seg(MESES,UI.mes,"mes")}`}
       <span class="spacer"></span>
       <span class="lbl">Orden</span>${seg([["precio","€"],["votos","Votos"]],UI.orden,"orden")}
       <label class="lbl"><input type="checkbox" data-act="ocultar" ${UI.ocultar?"checked":""}> Ocultar descartadas</label>
     </div>
-    <div class="legend"><span>Sábado · finca + menú + barra + DJ · IVA incl. · miles de €</span>
+    <div class="legend"><span>Sábado · finca + menú + barra + DJ · IVA incl. · miles de €</span><span>Alta/Media/Baja según cada finca (meses en el detalle)</span>
       <span><i class="sw" style="background:var(--ok-bg);border:1px solid var(--ok)"></i>≤ 24 k</span>
       <span><i class="sw" style="background:var(--warn-bg);border:1px solid var(--warn)"></i>24–30 k</span>
       <span><i class="sw" style="background:var(--bad-bg);border:1px solid var(--bad)"></i>&gt; 30 k</span>
@@ -338,7 +338,8 @@ tr.done .tt{text-decoration:line-through}
     }
     const N=[["Precio","precioTxt"],["Incluye","incluye"],["Mínimos","minimo"],["Para vosotros","importante"],["Opiniones","opiniones"]].filter(([,kk])=>f[kk]);
     const notes=N.length?`<details class="notes"><summary>Notas del dosier</summary><dl>${N.map(([l,kk])=>`<div><dt>${l}</dt><dd>${esc(f[kk])}</dd></div>`).join("")}</dl></details>`:"";
-    return `<div class="det-grid">${cells}${mx}${links}${ed}${notes}</div>`;
+    const tm=n.tm?`<div class="muted" style="font-size:12px">Temporadas de la finca: ${esc(n.tm)}</div>`:"";
+    return `<div class="det-grid">${cells}${tm}${mx}${links}${ed}${notes}</div>`;
   }
   function viewDecisiones(){
     const list=S.decisiones.slice().sort((a,b)=>(!!a.decision)-(!!b.decision)||(a.orden||99)-(b.orden||99));
